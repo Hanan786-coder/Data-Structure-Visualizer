@@ -5,3 +5,4 @@ TEAL_BRIGHT = (0, 200, 210) # Button Hover
 # Extras
 BLACK = (43, 40, 49)
 LIGHT_GREY = (238, 238, 238)
+WHITE = (255,255,255)
