@@ -119,7 +119,7 @@ peek_timer_start = 0
 
 # UI
 val_input = InputBox(50, 180, 140, 40, text="", max_chars=9)
-cap_input = InputBox(50, 100, 80, 40, text="6", is_numeric_only=True, max_chars=2)
+cap_input = InputBox(50, 100, 80, 40, text="6", is_numeric_only=True, max_chars                                                                                                                                                                     =2)
 
 
 def set_status(msg, color, logic_msg=""):
