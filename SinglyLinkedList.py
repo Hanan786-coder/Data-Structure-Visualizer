@@ -1,6 +1,7 @@
 import pygame
 from button_template import Button
 import Colors
+import time
 
 class Node:
     def __init__(self, data, pos, next=None):
@@ -9,12 +10,64 @@ class Node:
         self.next = next
 
         # UI terms
-        self.shape = pygame.Rect(pos[0], pos[1], 70, 60)
+        self.shape = pygame.Rect(pos[0], pos[1], 90, 70)
         self.text = nodeFont.render(f"{data}",True,Colors.LIGHT_GREY)
-    def draw(self, screen):
-        pygame.draw.rect(screen,Colors.TEAL,self.shape)
-        screen.blit(subFont.render("data: ", True, Colors.LIGHT_GREY),(self.shape.x, self.shape.y))
-        screen.blit(self.text,(self.shape.x + 25, self.shape.y + 15))
+
+    def draw(self, screen, sll):
+        # Draw node box
+        pygame.draw.rect(screen, Colors.TEAL, self.shape, border_radius=2)
+
+        # Labels
+        screen.blit(subFont.render("data: ", True, Colors.LIGHT_GREY), (self.shape.x, self.shape.y))
+        text_rect = self.text.get_rect(center=self.shape.center)
+        screen.blit(self.text, text_rect)
+
+        if self == sll.head:
+            draw_pointer(self, "HEAD", Colors.LIGHT_GREY)
+        if self == sll.tail:
+            draw_pointer(self, "TAIL", Colors.LIGHT_GREY)
+
+        # Arrows
+        if self.next is not None:
+            start_x = self.shape.x + self.shape.width
+            start_y = self.shape.y + self.shape.height // 2
+
+            end_x = self.next.shape.x
+            end_y = self.next.shape.y + self.next.shape.height // 2
+
+            # Draw line between nodes
+            pygame.draw.line(screen, Colors.LIGHT_GREY,
+                             (start_x, start_y), (end_x, end_y),2)
+
+            # Arrow-head (triangle)
+            arrow_size = 7
+            pygame.draw.polygon(screen, Colors.LIGHT_GREY, [
+                (end_x, end_y),
+                (end_x - arrow_size, end_y - arrow_size),
+                (end_x - arrow_size, end_y + arrow_size)
+            ])
+        else:
+            # Draw NULL arrow
+            start_x = self.shape.x + self.shape.width
+            start_y = self.shape.y + self.shape.height // 2
+
+            null_x = start_x + 60
+            null_y = start_y
+
+            # Line to NULL
+            pygame.draw.line(screen, Colors.LIGHT_GREY,
+                             (start_x, start_y), (null_x, null_y), 2)
+
+            # Arrow-head pointing to NULL
+            pygame.draw.polygon(screen, Colors.LIGHT_GREY, [
+                (null_x, null_y),
+                (null_x - 7, null_y - 7),
+                (null_x - 7, null_y + 7)
+            ])
+
+            # Draw the NULL text
+            null_text = paraFont.render("NULL", True, Colors.LIGHT_GREY)
+            screen.blit(null_text, (null_x + 5, null_y - 10))
 
 
 # Initializing
@@ -34,8 +87,8 @@ def get_font(size):
 # Font loaders
 titleFont = get_font(28)
 paraFont = get_font(17)
-subFont = get_font(11)
-nodeFont = get_font(22)
+subFont = get_font(13)
+nodeFont = get_font(28)
 
 # Text rendering
 title = titleFont.render("Singly Linked List", True, Colors.TEAL)
@@ -77,14 +130,88 @@ class InputBar:
         pygame.draw.rect(screen,self.color,self.shape,2, border_radius=5)
         screen.blit(self.text_rendered,(self.shape.x + 2,self.shape.y + 5))
 
+# Helper pointer drawing
+def draw_pointer(node, text, color):
+    node_x = node.shape.x + node.shape.width // 2
+
+    # Up-pointing triangle (same style as QUEUE FRONT)
+    if text == "TAIL":
+        node_y = node.shape.y + node.shape.height + 8
+        pygame.draw.polygon(screen, color, [
+            (node_x, node_y),
+            (node_x - 10, node_y + 15),
+            (node_x + 10, node_y + 15)
+        ])
+    else:
+        node_y = node.shape.y - 10
+        pygame.draw.polygon(screen, color, [
+            (node_x, node_y),
+            (node_x - 10, node_y - 15),
+            (node_x + 10, node_y - 15)
+        ])
+
+    # Label
+    lbl_head = subFont.render(f"{text}", True, color)
+    if text == "TAIL":
+        screen.blit(lbl_head, (node_x - lbl_head.get_width() // 2, node_y + 20))
+    else:
+        screen.blit(lbl_head, (node_x - lbl_head.get_width() // 2, node_y - 37))
+
+
+def erase_pointer(screen, node, pointer_type="HEAD"):
+    # Calculate center of the node
+    node_x = node.shape.x + node.shape.width // 2
+
+    if pointer_type == "TAIL":
+        start_y = node.shape.y + node.shape.height + 2
+
+        clear_rect = pygame.Rect(0, 0, 80, 50)
+        clear_rect.centerx = node_x
+        clear_rect.y = start_y
+
+        pygame.draw.rect(screen, Colors.GREY, clear_rect)
+
+    else:
+
+        # Determine how high we need to erase
+        if pointer_type == "TEMP_ABOVE":
+            rect_height = 40
+            clear_rect = pygame.Rect(0, 0, 80, rect_height)
+            clear_rect.centerx = node_x
+            clear_rect.bottom = node.shape.y - 48
+            pygame.draw.rect(screen, Colors.GREY, clear_rect)
+        else:
+            rect_height = 50
+            clear_rect = pygame.Rect(0, 0, 80, rect_height)
+            clear_rect.centerx = node_x
+            clear_rect.bottom = node.shape.y - 2
+
+
+        pygame.draw.rect(screen, Colors.GREY, clear_rect)
+def draw_temp_on_head(node):
+    temp_x = node.shape.x + node.shape.width // 2
+    temp_y = node.shape.y - 20
+
+    # Draw TEMP pointer
+    pygame.draw.polygon(screen, Colors.ORANGE, [
+        (temp_x, temp_y - 29),  # Tip of TEMP pointer (above HEAD)
+        (temp_x - 10, temp_y - 45),  # Left point
+        (temp_x + 10, temp_y - 45)  # Right point
+    ])
+
+    lbl_temp = subFont.render("TEMP", True, Colors.ORANGE)
+    screen.blit(lbl_temp, (temp_x - lbl_temp.get_width() // 2, temp_y - 65))
+
 # Text Input
 cap_bar = InputBar(50,145,130,40,Colors.BLACK)
+cap_bar.text = "6"
 node_bar = InputBar(50,230,130,40,Colors.BLACK,4)
 
 # Buttons
 set_max_button = Button(190, 145, 120, 40, "Set Max", None, 18)
 add_node_button = Button(190, 230, 120, 40, "Add Node", None, 18)
-# delete_node_button = Button(50, 220, 140, 50, "Delete Node", None, 18)
+delete_head_button = Button(50, 290, 130, 50, "Delete Head", None, 18)
+delete_tail_button = Button(190, 290, 130, 50, "Delete Tail", None, 18)
 
 # Linked Lists class
 class SLL:
@@ -92,14 +219,24 @@ class SLL:
         # Logical terms
         self.head = head
         self.size = size
-        self.length = 0
+        self.length = 1
         self.tail = None
 
         # UI terms
-        self.initialPos = (90, 400)
-        self.currentPos = self.initialPos
+        self.initialPos = {
+            1 : (350,430),
+            2 : (300,430),
+            3 : (250,430),
+            4 : (200,430),
+            5 : (110,430),
+            6 : (40,430),
+        }
+        self.currentPos = self.initialPos[self.size]
         self.nodes = [] # For drawing
 
+    def drawList(self):
+        for node in self.nodes:
+            node.draw(screen, sll)
 
     def addNode(self, data):
         if self.length > self.size:
@@ -114,8 +251,112 @@ class SLL:
             self.tail.next = newNode
             self.tail = newNode
         self.length += 1
-        self.currentPos = (self.currentPos[0] + 110, self.currentPos[1])
+        self.currentPos = (self.currentPos[0] + 125, self.currentPos[1])
         self.nodes.append(newNode)
+
+    def deleteHead(self, screen):
+        if self.head is None:
+            return
+        else:
+            temp = self.head
+
+            draw_temp_on_head(temp)
+
+            pygame.display.update()
+            pygame.time.delay(500)
+
+            erase_pointer(screen, temp, "HEAD")
+            erase_pointer(screen, temp, "TEMP_ABOVE")
+
+            draw_pointer(self.head, "TEMP", Colors.ORANGE)
+
+            if self.head.next:
+                self.head = self.head.next
+            else:
+                self.head = None
+                self.tail = None
+
+            # Draw new HEAD pointer if exists
+            if self.head:
+                draw_pointer(self.head, "HEAD", Colors.LIGHT_GREY)
+
+            pygame.display.update()
+            pygame.time.delay(500)
+
+            self.length -= 1
+            self.nodes.pop(0)
+
+            for node in self.nodes:
+                node.shape.x -= 125
+
+            # Update current position for next node
+            if len(self.nodes) > 0:
+                last_node = self.nodes[-1]
+                self.currentPos = (last_node.shape.x + 125, self.currentPos[1])
+            else:
+                # Reset to initial position if list is empty
+                self.currentPos = self.initialPos[self.size]
+
+            pygame.time.delay(500)
+
+    def deleteTail(self):
+        if self.tail is None:
+            return
+
+        if self.head == self.tail:
+            self.deleteHead(screen)
+            return
+
+        temp = self.head
+
+        draw_temp_on_head(temp)
+        pygame.display.update()
+        pygame.time.delay(500)
+
+        # Traverse to the second to last node
+        while temp.next != self.tail:
+            if temp == self.head:
+                erase_pointer(screen, temp, "TEMP_ABOVE")
+            else:
+                erase_pointer(screen, temp, "TEMP")
+
+            temp = temp.next
+
+            # Draw new pointer
+            if self.length > 3:
+                draw_pointer(temp, "TEMP", Colors.ORANGE)
+            pygame.display.update()
+            pygame.time.delay(500)
+
+        # Logical Deletion
+        del self.tail
+        self.nodes.pop()
+        self.length -= 1
+
+        self.tail = temp
+        self.tail.next = None
+
+        # Clear previous list
+        rect_x = self.initialPos[self.size][0]
+        rect_y = self.initialPos[self.size][1]
+        clear_rect = pygame.Rect(rect_x, rect_y, 900, 150)
+        pygame.draw.rect(screen, Colors.GREY, clear_rect)
+
+        # New List
+        self.drawList()
+
+        erase_pointer(screen, self.tail, "TAIL")
+        if self.length > 3:
+            draw_pointer(self.tail, "TEMP", Colors.ORANGE)
+        pygame.display.update()
+        pygame.time.delay(500)
+
+        self.currentPos = (self.tail.shape.x + 125, self.tail.shape.y)
+
+        pygame.display.update()
+        pygame.time.delay(500)
+
+
 
     def destroyList(self):
         temp = self.head
@@ -123,7 +364,10 @@ class SLL:
             temp = temp.next
             del self.head # Delete the Node
             self.head = temp
+        del temp
         self.nodes.clear()
+        self.length = 1
+        self.currentPos = self.initialPos[self.size]
 
 
 
@@ -140,16 +384,19 @@ while running:
     screen.blit(title, (50, 30))
     screen.blit(cap_value_txt, (50, 115))
     screen.blit(value_txt, (50, 200))
+
     # Buttons
     set_max_button.draw(screen)
-    # delete_node_button.draw(screen)
+    delete_head_button.draw(screen)
     add_node_button.draw(screen)
+    delete_tail_button.draw(screen)
+
     # Input Bars
     cap_bar.draw(screen)
     node_bar.draw(screen)
+
     # List
-    for node in sll.nodes:
-        node.draw(screen)
+    sll.drawList()
 
 
     for event in pygame.event.get():
@@ -159,15 +406,19 @@ while running:
         if add_node_button.is_clicked(event):
             if node_bar.text != "":
                 sll.addNode(node_bar.text)
+                node_bar.text = ""
 
         if set_max_button.is_clicked(event):
-            if set_max_button != "":
+            if set_max_button != "" and int(cap_bar.text) <= 6:
                 sll.size = int(cap_bar.text)
                 sll.destroyList()
+        if delete_head_button.is_clicked(event):
+            sll.deleteHead(screen)
+        if delete_tail_button.is_clicked(event):
+            sll.deleteTail()
+
         cap_bar.handle_input(event)
         node_bar.handle_input(event)
-
-
 
     pygame.display.update()
     clock.tick(60)
