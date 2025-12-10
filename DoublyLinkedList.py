@@ -67,16 +67,16 @@ class InputBar:
                 self.text = self.text[:len(self.text) - 1]
             elif event.key == pygame.K_RETURN:
                 pass
-            else:
+            elif event.unicode.isprintable():
                 if len(self.text) < self.max_chars:
-                    self.text += str(event.unicode)
+                    self.text += event.unicode
 
         self.text_rendered = self.input_font.render(self.text, True, Colors.LIGHT_GREY)
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.bg_color, self.shape, border_radius=5)
         pygame.draw.rect(screen, self.color, self.shape, 2, border_radius=5)
-        screen.blit(self.text_rendered, (self.shape.x + 5, self.shape.y + 10))
+        screen.blit(self.text_rendered, (self.shape.x + 2, self.shape.y + 5))
 
 def draw_pointer(node, text, color):
     node_x = node.shape.x + node.shape.width // 2
@@ -760,121 +760,123 @@ class DLL:
         set_status("List Cleared", Colors.GREEN, "> Success")
 
 
-# --- UI SETUP ---
-dll = DLL(6)
+def main():
+    dll = DLL(6)
 
-cap_bar = InputBar(100, 145, 130, 40, Colors.BLACK)
-cap_bar.text = "6"
-node_bar = InputBar(100, 230, 130, 40, Colors.BLACK, 4)
-pos_insert_bar = InputBar(100, 315, 130, 40, Colors.BLACK, 2)
-pos_delete_bar = InputBar(380, 315, 130, 40, Colors.BLACK, 2)
-search_val_bar = InputBar(660, 315, 120, 40, Colors.BLACK, 2)
+    cap_bar = InputBar(100, 145, 130, 40, Colors.BLACK)
+    cap_bar.text = "6"
+    node_bar = InputBar(100, 230, 130, 40, Colors.BLACK, 4)
+    pos_insert_bar = InputBar(100, 315, 130, 40, Colors.BLACK, 2)
+    pos_delete_bar = InputBar(380, 315, 130, 40, Colors.BLACK, 2)
+    search_val_bar = InputBar(660, 315, 120, 40, Colors.BLACK, 2)
 
-set_max_button = Button(240, 145, 120, 40, "Set Max", None, 18)
-insert_tail_button = Button(240, 230, 120, 40, "Insert Tail", None, 18)
-insert_head_button = Button(370, 230, 120, 40, "Insert Head", None, 18)
-insert_at_pos_button = Button(240, 315, 120, 40, "Insert", None, 18)
-delete_head_button = Button(500, 170, 130, 50, "Delete Head", None, 18)
-delete_tail_button = Button(640, 170, 130, 50, "Delete Tail", None, 18)
-destroy_button = Button(780, 170, 130, 50, "Destroy", None, 18)
-delete_at_pos_button = Button(520, 315, 120, 40, "Delete", None, 18)
-search_button = Button(790, 315, 120, 40, "Search", None, 18)
+    set_max_button = Button(240, 145, 120, 40, "Set Max", None, 18)
+    insert_tail_button = Button(240, 230, 120, 40, "Insert Tail", None, 18)
+    insert_head_button = Button(370, 230, 120, 40, "Insert Head", None, 18)
+    insert_at_pos_button = Button(240, 315, 120, 40, "Insert", None, 18)
+    delete_head_button = Button(500, 170, 130, 50, "Delete Head", None, 18)
+    delete_tail_button = Button(640, 170, 130, 50, "Delete Tail", None, 18)
+    destroy_button = Button(780, 170, 130, 50, "Destroy", None, 18)
+    delete_at_pos_button = Button(520, 315, 120, 40, "Delete", None, 18)
+    search_button = Button(790, 315, 120, 40, "Search", None, 18)
 
-title = titleFont.render("Doubly Linked List", True, Colors.TEAL)
-cap_value_txt = paraFont.render("Capacity (Max 6): ", True, Colors.LIGHT_GREY)
-value_txt_1 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
-value_txt_2 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
-pos_txt_1 = paraFont.render("Pos: ", True, Colors.LIGHT_GREY)
-pos_txt_2 = paraFont.render("Pos: ", True, Colors.LIGHT_GREY)
+    title = titleFont.render("Doubly Linked List", True, Colors.TEAL)
+    cap_value_txt = paraFont.render("Capacity (Max 6): ", True, Colors.LIGHT_GREY)
+    value_txt_1 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
+    value_txt_2 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
+    pos_txt_1 = paraFont.render("Pos: ", True, Colors.LIGHT_GREY)
+    pos_txt_2 = paraFont.render("Pos: ", True, Colors.LIGHT_GREY)
 
-# --- MAIN LOOP ---
-running = True
-clock = pygame.time.Clock()
+    running = True
+    clock = pygame.time.Clock()
 
-while running:
-    screen.fill(Colors.GREY)
-    
-    screen.blit(title, (50, 40))
-    screen.blit(cap_value_txt, (100, 115))
-    screen.blit(value_txt_1, (100, 200))
-    screen.blit(value_txt_2, (660, 285))
-    screen.blit(pos_txt_1, (100, 285))
-    screen.blit(pos_txt_2, (380, 285))
-    
-    set_max_button.draw(screen)
-    insert_tail_button.draw(screen)
-    insert_head_button.draw(screen)
-    insert_at_pos_button.draw(screen)
-    delete_head_button.draw(screen)
-    delete_tail_button.draw(screen)
-    destroy_button.draw(screen)
-    delete_at_pos_button.draw(screen)
-    search_button.draw(screen)
-    
-    cap_bar.draw(screen)
-    node_bar.draw(screen)
-    pos_insert_bar.draw(screen)
-    pos_delete_bar.draw(screen)
-    search_val_bar.draw(screen)
-    
-    dll.drawList()
-    update_status_ui()
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-        cap_bar.handle_input(event)
-        node_bar.handle_input(event)
-        pos_insert_bar.handle_input(event)
-        pos_delete_bar.handle_input(event)
-        search_val_bar.handle_input(event)
+    while running:
+        screen.fill(Colors.GREY)
         
-        if set_max_button.is_clicked(event):
-            if cap_bar.text.isdigit() and 0 < int(cap_bar.text) <= 6:
-                dll = DLL(int(cap_bar.text))
-                set_status(f"Max Set to {cap_bar.text}", Colors.GREEN)
-            else:
-                set_status("Invalid Max (1-6)", Colors.RED)
-
-        if insert_tail_button.is_clicked(event):
-            if node_bar.text: 
-                dll.insertAtTail(node_bar.text)
-                node_bar.text = ""
-            else: set_status("Input Value", Colors.RED)
-
-        if insert_head_button.is_clicked(event):
-            if node_bar.text: 
-                dll.insertAtHead(node_bar.text)
-                node_bar.text = ""
-            else: 
-                set_status("Input Value", Colors.RED)
-
-        if insert_at_pos_button.is_clicked(event):
-            if node_bar.text and pos_insert_bar.text.isdigit():
-                dll.insertAtPos(node_bar.text, int(pos_insert_bar.text))
-                pos_insert_bar.text = ""
-            else: 
-                set_status("Check Inputs", Colors.RED)
-
-        if delete_head_button.is_clicked(event): 
-            dll.deleteHead()
-        if delete_tail_button.is_clicked(event): 
-            dll.deleteTail()
-        if destroy_button.is_clicked(event): 
-            dll.destroy()
+        screen.blit(title, (50, 40))
+        screen.blit(cap_value_txt, (100, 115))
+        screen.blit(value_txt_1, (100, 200))
+        screen.blit(value_txt_2, (660, 285))
+        screen.blit(pos_txt_1, (100, 285))
+        screen.blit(pos_txt_2, (380, 285))
         
-        if delete_at_pos_button.is_clicked(event):
-            if pos_delete_bar.text.isdigit():
-                dll.deleteFromPos(int(pos_delete_bar.text))
-                pos_delete_bar.text = ""
-            else: set_status("Invalid Pos", Colors.RED)
+        set_max_button.draw(screen)
+        insert_tail_button.draw(screen)
+        insert_head_button.draw(screen)
+        insert_at_pos_button.draw(screen)
+        delete_head_button.draw(screen)
+        delete_tail_button.draw(screen)
+        destroy_button.draw(screen)
+        delete_at_pos_button.draw(screen)
+        search_button.draw(screen)
+        
+        cap_bar.draw(screen)
+        node_bar.draw(screen)
+        pos_insert_bar.draw(screen)
+        pos_delete_bar.draw(screen)
+        search_val_bar.draw(screen)
+        
+        dll.drawList()
+        update_status_ui()
 
-        if search_button.is_clicked(event):
-            if search_val_bar.text: dll.search(search_val_bar.text)
-            else: set_status("Input Value", Colors.RED)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    pygame.display.update()
-    clock.tick(60)
+            cap_bar.handle_input(event)
+            node_bar.handle_input(event)
+            pos_insert_bar.handle_input(event)
+            pos_delete_bar.handle_input(event)
+            search_val_bar.handle_input(event)
+            
+            if set_max_button.is_clicked(event):
+                if cap_bar.text.isdigit() and 0 < int(cap_bar.text) <= 6:
+                    dll = DLL(int(cap_bar.text))
+                    set_status(f"Max Set to {cap_bar.text}", Colors.GREEN)
+                else:
+                    set_status("Invalid Max (1-6)", Colors.RED)
 
-pygame.quit()
+            if insert_tail_button.is_clicked(event):
+                if node_bar.text: 
+                    dll.insertAtTail(node_bar.text)
+                    node_bar.text = ""
+                else: set_status("Input Value", Colors.RED)
+
+            if insert_head_button.is_clicked(event):
+                if node_bar.text: 
+                    dll.insertAtHead(node_bar.text)
+                    node_bar.text = ""
+                else: 
+                    set_status("Input Value", Colors.RED)
+
+            if insert_at_pos_button.is_clicked(event):
+                if node_bar.text and pos_insert_bar.text.isdigit():
+                    dll.insertAtPos(node_bar.text, int(pos_insert_bar.text))
+                    pos_insert_bar.text = ""
+                else: 
+                    set_status("Check Inputs", Colors.RED)
+
+            if delete_head_button.is_clicked(event): 
+                dll.deleteHead()
+            if delete_tail_button.is_clicked(event): 
+                dll.deleteTail()
+            if destroy_button.is_clicked(event): 
+                dll.destroy()
+            
+            if delete_at_pos_button.is_clicked(event):
+                if pos_delete_bar.text.isdigit():
+                    dll.deleteFromPos(int(pos_delete_bar.text))
+                    pos_delete_bar.text = ""
+                else: set_status("Invalid Pos", Colors.RED)
+
+            if search_button.is_clicked(event):
+                if search_val_bar.text: dll.search(search_val_bar.text)
+                else: set_status("Input Value", Colors.RED)
+
+        pygame.display.update()
+        clock.tick(60)
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
