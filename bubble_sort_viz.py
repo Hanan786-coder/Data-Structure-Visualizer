@@ -422,7 +422,7 @@ while running:
     screen.blit(title, (20, 20))
 
     screen.blit(font_small.render("1. Set Array Size (2-8):", True, TEXT_COLOR), (20, 55))
-    screen.blit(font_small.render("2. Manual Input (CSV):", True, TEXT_COLOR), (20, 125))
+    screen.blit(font_small.render("2. Manual Input :", True, TEXT_COLOR), (20, 125))
     screen.blit(font_small.render("3. Controls:", True, TEXT_COLOR), (20, 220))
 
     for el in ui_elements:
