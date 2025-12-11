@@ -5,7 +5,7 @@ import Colors  # Your custom colors file
 
 # --- Configuration ---
 SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 600 # Increased slightly for depth
+SCREEN_HEIGHT = 700 # Increased slightly for depth
 SIDEBAR_WIDTH = 300
 
 # Colors

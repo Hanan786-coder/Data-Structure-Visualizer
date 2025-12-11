@@ -3,7 +3,7 @@ import sys
 import Colors
 
 # --- Configuration ---
-SCREEN_WIDTH = 900
+SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 700
 
 # Map Colors

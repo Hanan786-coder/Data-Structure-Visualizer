@@ -6,7 +6,7 @@ import sys
 # -----------------------------------------------------------------------------
 
 # Window Dimensions
-WIDTH, HEIGHT = 1000, 600
+WIDTH, HEIGHT = 1000, 700
 
 # Color Constants
 ORANGE = (255, 108, 12)  # Highlight / Important

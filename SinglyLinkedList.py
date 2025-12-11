@@ -260,7 +260,7 @@ class SLL:
 
     def drawList(self):
         for node in self.nodes:
-            node.draw(screen, sll)
+            node.draw(screen, self)
 
     def insertAtTail(self, data, screen):
         if self.length > self.size:
