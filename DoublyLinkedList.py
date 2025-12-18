@@ -545,7 +545,7 @@ class DLL:
 
         self.tail = self.tail.prev
         
-        draw_pointer(self.tail, "TAIL", Colors.LIGHT_GREY)
+        draw_pointer(self.tail, "TAIL", Colors.LIGHT_GREY, screen)
         update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(1000)
