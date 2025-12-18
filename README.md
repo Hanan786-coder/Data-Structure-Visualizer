@@ -169,10 +169,6 @@ The following developers contributed to this project:
 | **Muhammad Muazzam Shafiq** | [@MuazzamShafiq](https://github.com/MuazzamShafiq) |
 | **Muhammad Saad Rehman** | [@saadrehman034](https://github.com/saadrehman034) |
 
-## 📄 License
-
-This project is open source and available under the **MIT License**. See LICENSE file for details.
-
 ---
 
 <div align="center">
