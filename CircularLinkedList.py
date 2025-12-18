@@ -1069,6 +1069,7 @@ class SCLL:
         self._recalculate_positions()
         self._redraw(screen)
         set_status("Deletion Complete", Colors.GREEN, "> Success")
+        update_status_ui(screen)
         pygame.time.delay(500)
 
     def search(self, value, screen):
@@ -1114,6 +1115,7 @@ class SCLL:
             
         if not found:
             set_status("Value Not Found", Colors.RED, "> return -1")
+            update_status_ui(screen)
             
         self._redraw(screen)
 

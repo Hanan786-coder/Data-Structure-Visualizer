@@ -343,6 +343,7 @@ class DLL:
         set_status("Traversing...", Colors.ORANGE, "> while i < pos - 1")
         temp = self.head
         draw_pointer_on_head(temp, "TEMP", Colors.ORANGE, screen)
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(1000)
 
@@ -388,6 +389,7 @@ class DLL:
         pygame.draw.line(screen, Colors.LIGHT_GREY, corner4, end_pos, 2)
         pygame.draw.polygon(screen, Colors.LIGHT_GREY, [(end_pos[0], end_pos[1]), (end_pos[0]-5, end_pos[1]-5), (end_pos[0]-5, end_pos[1]+5)])
         
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(1000)
         
@@ -399,6 +401,7 @@ class DLL:
         # Erase the temp.next.prev arrow
         erase_rect = pygame.Rect(temp.next.shape.x - 35, temp.next.shape.y + 40, 35, 15)
         pygame.draw.rect(screen, Colors.GREY, erase_rect)
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(200)
 
@@ -417,6 +420,7 @@ class DLL:
         pygame.draw.line(screen, Colors.ORANGE, corner4, end_pos, 2)
         pygame.draw.polygon(screen, Colors.ORANGE, [(end_pos[0], end_pos[1]), (end_pos[0]+5, end_pos[1]-5), (end_pos[0]+5, end_pos[1]+5)])
         
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(1000)
         
@@ -428,6 +432,7 @@ class DLL:
         # Erase temp's next arrow
         erase_rect = pygame.Rect(temp.next.shape.x - 35, temp.next.shape.y + 15, 35, 15)
         pygame.draw.rect(screen, Colors.GREY, erase_rect)
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(200)
         
@@ -446,6 +451,7 @@ class DLL:
         pygame.draw.line(screen, Colors.LIGHT_GREY, corner4, end_pos, 2)
         pygame.draw.polygon(screen, Colors.LIGHT_GREY, [(end_pos[0], end_pos[1]), (end_pos[0]-5, end_pos[1]-5), (end_pos[0]-5, end_pos[1]+5)])
         
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(1000)
         
@@ -469,6 +475,7 @@ class DLL:
         pygame.draw.line(screen, Colors.ORANGE, corner4, end_pos, 2)
         pygame.draw.polygon(screen, Colors.ORANGE, [(end_pos[0], end_pos[1]), (end_pos[0]+5, end_pos[1]-5), (end_pos[0]+5, end_pos[1]+5)])
         
+        update_status_ui(screen)
         pygame.display.update()
         pygame.time.delay(1000)
         
@@ -725,6 +732,7 @@ class DLL:
             
         if not found:
             set_status("Value Not Found", Colors.RED, "> return -1")
+            update_status_ui(screen)
             
         self._redraw(screen)
 
