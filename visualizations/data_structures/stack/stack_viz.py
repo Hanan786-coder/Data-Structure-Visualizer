@@ -1,8 +1,11 @@
 import pygame
 import sys
-import Colors
+from core import Colors
 
 # --- Configuration ---
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 700
+
 # Map Colors
 BACKGROUND_COLOR = Colors.GREY
 ELEMENT_COLOR = Colors.TEAL
@@ -15,24 +18,22 @@ ERROR_COLOR = (255, 87, 87)
 SUCCESS_COLOR = (0, 200, 81)
 
 # Dimensions
-ELEM_WIDTH = 100
-ELEM_HEIGHT = 70
+ELEM_WIDTH = 200
+ELEM_HEIGHT = 40
 SPACING = 5
-START_X = 300
-MAX_ALLOWED_CAPACITY = 6
+MAX_ALLOWED_CAPACITY = 10
 
-# --- Font Loading ---
+# --- Font Loading Helper ---
 def get_font(size, bold=False):
     try:
         return pygame.font.Font("ScienceGothic-Regular.ttf", size)
     except FileNotFoundError:
         return pygame.font.SysFont('Arial', size, bold=bold)
 
-# Global fonts (loaded once)
+# Global fonts
 font_title = get_font(28)
 font_ui = get_font(17)
 font_elem = get_font(19)
-font_index = get_font(11)
 font_logic = get_font(13)
 
 
@@ -95,7 +96,7 @@ class InputBox:
 
     def draw(self, screen):
         pygame.draw.rect(screen, INPUT_BG_COLOR, self.rect, border_radius=5)
-        # Center vertically
+        # Center text vertically
         screen.blit(self.txt_surface, (self.rect.x + 8, self.rect.y + (self.rect.height // 2 - 8)))
         pygame.draw.rect(screen, self.color, self.rect, 2, border_radius=5)
 
@@ -104,22 +105,22 @@ class InputBox:
 def run(screen):
     clock = pygame.time.Clock()
 
-    # --- Local Logic State (Reset every time run is called) ---
+    # --- Local Logic State (Encapsulated) ---
     state = {
-        "queue": [],
-        "capacity": 6,
-        "status_message": "Queue Initialized",
+        "stack": [],
+        "capacity": 10,
+        "status_message": "Stack Initialized",
         "status_color": TEXT_COLOR,
         "logic_message": "Waiting for operation...",
         "peek_highlight_idx": -1,
         "peek_timer_start": 0
     }
 
-    # UI Inputs
+    # UI Elements
     val_input = InputBox(50, 180, 140, 40, text="", max_chars=9)
-    cap_input = InputBox(50, 100, 80, 40, text="6", is_numeric_only=True, max_chars=2)
+    cap_input = InputBox(50, 90, 80, 40, text="10", is_numeric_only=True, max_chars=2)
 
-    # --- Inner Helper Functions ---
+    # --- Helper Functions (Inside run to access state) ---
     def set_status(msg, color, logic_msg=""):
         state["status_message"] = msg
         state["status_color"] = color
@@ -131,7 +132,7 @@ def run(screen):
             new_cap = int(cap_input.text)
 
             if new_cap > MAX_ALLOWED_CAPACITY:
-                set_status(f"Error: Max Limit is {MAX_ALLOWED_CAPACITY}!", ERROR_COLOR, "Constraint: Capacity <= 6")
+                set_status(f"Error: Max Limit is {MAX_ALLOWED_CAPACITY}!", ERROR_COLOR, "Constraint: Capacity <= 10")
                 cap_input.text = str(MAX_ALLOWED_CAPACITY)
                 cap_input.txt_surface = font_ui.render(cap_input.text, True, TEXT_COLOR)
                 return
@@ -140,59 +141,59 @@ def run(screen):
                 set_status("Capacity must be >= 1", ERROR_COLOR, "Error: Invalid Size")
                 return
 
-            if len(state["queue"]) > new_cap:
-                state["queue"] = state["queue"][:new_cap]
-                set_status(f"Resized to {new_cap}. Truncated.", ERROR_COLOR, "Rear items removed")
+            if len(state["stack"]) > new_cap:
+                state["stack"] = state["stack"][:new_cap]
+                set_status(f"Resized to {new_cap}. Truncated.", ERROR_COLOR, f"stack = stack[:{new_cap}]")
             else:
-                set_status(f"Capacity updated to {new_cap}", SUCCESS_COLOR, "capacity = " + str(new_cap))
+                set_status(f"Capacity updated to {new_cap}", SUCCESS_COLOR, "Capacity variable updated")
+
             state["capacity"] = new_cap
         except ValueError:
             set_status("Invalid Capacity", ERROR_COLOR)
 
-    def enqueue_item():
+    def push_item():
         val = val_input.text.strip()
         if not val:
             set_status("Enter a value first!", ERROR_COLOR, "if val is None: return")
             return
 
-        if len(state["queue"]) >= state["capacity"]:
-            set_status("Queue Overflow!", ERROR_COLOR, "if size == capacity: Overflow")
+        if len(state["stack"]) >= state["capacity"]:
+            set_status("Stack Overflow!", ERROR_COLOR, "if len(stack) == capacity: Overflow")
             return
 
-        state["queue"].append(val)
+        state["stack"].append(val)
         val_input.text = ""
         val_input.txt_surface = font_ui.render("", True, TEXT_COLOR)
-        set_status(f"Enqueued: {val}", SUCCESS_COLOR, f"queue[rear] = {val} | rear++")
+        set_status(f"Pushed: {val}", SUCCESS_COLOR, f"stack.append({val}) | Top: {len(state['stack']) - 1}")
 
-    def dequeue_item():
-        if len(state["queue"]) == 0:
-            set_status("Queue Underflow!", ERROR_COLOR, "if size == 0: Underflow")
+    def pop_item():
+        if len(state["stack"]) == 0:
+            set_status("Stack Underflow!", ERROR_COLOR, "if len(stack) == 0: Underflow")
             return
 
-        removed = state["queue"].pop(0)
-        set_status(f"Dequeued: {removed}", SUCCESS_COLOR, f"val = queue[0] | Shift Left | rear--")
+        popped = state["stack"].pop()
+        set_status(f"Popped: {popped}", SUCCESS_COLOR, f"val = stack.pop() | New Top: {len(state['stack']) - 1}")
 
-    def peek_item():
-        if len(state["queue"]) == 0:
-            set_status("Queue is Empty", ERROR_COLOR, "return None")
+    def top_item():
+        if len(state["stack"]) == 0:
+            set_status("Stack is Empty", ERROR_COLOR, "return None")
             return
 
-        state["peek_highlight_idx"] = 0
+        state["peek_highlight_idx"] = len(state["stack"]) - 1
         state["peek_timer_start"] = pygame.time.get_ticks()
-        set_status(f"Front Item: {state['queue'][0]}", HIGHLIGHT_COLOR, "return queue[front]")
+        set_status(f"Top Element: {state['stack'][-1]}", HIGHLIGHT_COLOR, f"return stack[{len(state['stack']) - 1}]")
 
     def go_back():
         return "back"
 
-    # --- Buttons Definition ---
-    btn_set_cap = Button(140, 100, 100, 40, "Set Cap", set_capacity)
-    btn_enq = Button(200, 180, 100, 40, "Enqueue", enqueue_item)
-    btn_deq = Button(50, 240, 120, 50, "Dequeue", dequeue_item)
-    btn_peek = Button(180, 240, 120, 50, "Peek", peek_item)
-    # The back button calls go_back which returns "back"
+    # Buttons
+    btn_set_cap = Button(140, 90, 100, 40, "Set Cap", set_capacity)
+    btn_push = Button(200, 180, 100, 40, "Push", push_item)
+    btn_pop = Button(50, 240, 120, 50, "Pop", pop_item)
+    btn_top = Button(180, 240, 120, 50, "Top", top_item)
     btn_back = Button(900, 15, 80, 40, "← Back", go_back)
 
-    buttons = [btn_set_cap, btn_enq, btn_deq, btn_peek, btn_back]
+    buttons = [btn_set_cap, btn_push, btn_pop, btn_top, btn_back]
     input_boxes = [val_input, cap_input]
 
     # --- Main Loop ---
@@ -207,10 +208,10 @@ def run(screen):
                 state["peek_highlight_idx"] = -1
                 set_status("Ready", TEXT_COLOR, "Waiting...")
 
-        # --- Event Handling ---
+        # --- Events ---
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
+                return "quit"
             
             for box in input_boxes:
                 box.handle_event(event)
@@ -218,11 +219,10 @@ def run(screen):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for btn in buttons:
                     result = btn.check_click(event.pos)
-                    # If the button returned "back", exit the run function
+                    # Handle return signal
                     if result == "back":
                         return "back"
 
-        # Update Hover States
         for btn in buttons:
             btn.check_hover(mouse_pos)
 
@@ -230,7 +230,7 @@ def run(screen):
         screen.fill(BACKGROUND_COLOR)
 
         # 1. UI Dashboard
-        title_surf = font_title.render("QUEUE (FIFO)", True, ELEMENT_COLOR)
+        title_surf = font_title.render("STACK (LIFO)", True, ELEMENT_COLOR)
         screen.blit(title_surf, (50, 30))
 
         status_surf = font_ui.render(state["status_message"], True, state["status_color"])
@@ -249,22 +249,28 @@ def run(screen):
         for box in input_boxes: box.draw(screen)
         for btn in buttons: btn.draw(screen)
 
-        # 2. Visualization
-        container_width = state["capacity"] * (ELEM_WIDTH + SPACING) + SPACING
-        container_y = 400
+        # 2. Visualization (Bucket)
+        bucket_center_x = 600
+        bucket_bottom_y = 650
 
-        # Guidelines
-        pygame.draw.line(screen, CONTAINER_COLOR,
-                        (START_X, container_y - 10),
-                        (START_X + container_width, container_y - 10), 4)
-        pygame.draw.line(screen, CONTAINER_COLOR,
-                        (START_X, container_y + ELEM_HEIGHT + 10),
-                        (START_X + container_width, container_y + ELEM_HEIGHT + 10), 4)
+        wall_height = state["capacity"] * (ELEM_HEIGHT + SPACING) + 20
 
-        # Elements
-        for i, item in enumerate(state["queue"]):
-            x_pos = START_X + i * (ELEM_WIDTH + SPACING) + SPACING
-            rect = pygame.Rect(x_pos, container_y, ELEM_WIDTH, ELEM_HEIGHT)
+        # Draw Bucket Walls
+        pygame.draw.line(screen, CONTAINER_COLOR,
+                        (bucket_center_x - ELEM_WIDTH // 2 - 5, bucket_bottom_y),
+                        (bucket_center_x - ELEM_WIDTH // 2 - 5, bucket_bottom_y - wall_height), 4)
+        pygame.draw.line(screen, CONTAINER_COLOR,
+                        (bucket_center_x + ELEM_WIDTH // 2 + 5, bucket_bottom_y),
+                        (bucket_center_x + ELEM_WIDTH // 2 + 5, bucket_bottom_y - wall_height), 4)
+        pygame.draw.line(screen, CONTAINER_COLOR,
+                        (bucket_center_x - ELEM_WIDTH // 2 - 5, bucket_bottom_y),
+                        (bucket_center_x + ELEM_WIDTH // 2 + 5, bucket_bottom_y), 4)
+
+        # Draw Stack Elements (Bottom up)
+        for i, item in enumerate(state["stack"]):
+            y_pos = bucket_bottom_y - (i + 1) * (ELEM_HEIGHT + SPACING) + SPACING
+            x_pos = bucket_center_x - ELEM_WIDTH // 2
+            rect = pygame.Rect(x_pos, y_pos, ELEM_WIDTH, ELEM_HEIGHT)
 
             bg_col = HIGHLIGHT_COLOR if i == state["peek_highlight_idx"] else ELEMENT_COLOR
             pygame.draw.rect(screen, bg_col, rect, border_radius=6)
@@ -273,28 +279,17 @@ def run(screen):
             txt_rect = txt_surf.get_rect(center=rect.center)
             screen.blit(txt_surf, txt_rect)
 
-            # Index
-            idx_surf = font_index.render(f"{i}", True, Colors.LIGHT_GREY)
-            screen.blit(idx_surf, (x_pos + 6, container_y + 4))
+            idx_surf = font_ui.render(f"[{i}]", True, Colors.LIGHT_GREY)
+            screen.blit(idx_surf, (x_pos - 35, y_pos + 8))
 
-        # Pointers
-        if state["queue"]:
-            # FRONT
-            front_x = START_X + SPACING + ELEM_WIDTH // 2
-            front_y = container_y - 20
-            pygame.draw.polygon(screen, TEXT_COLOR,
-                                [(front_x, front_y), (front_x - 10, front_y - 15), (front_x + 10, front_y - 15)])
-            lbl_front = font_index.render("FRONT", True, TEXT_COLOR)
-            screen.blit(lbl_front, (front_x - 20, front_y - 35))
+        # Top Pointer
+        if state["stack"]:
+            top_y = bucket_bottom_y - (len(state["stack"])) * (ELEM_HEIGHT + SPACING) + SPACING + ELEM_HEIGHT // 2
+            top_x = bucket_center_x + ELEM_WIDTH // 2 + 10
 
-            # REAR
-            rear_idx = len(state["queue"]) - 1
-            rear_x = START_X + rear_idx * (ELEM_WIDTH + SPACING) + SPACING + ELEM_WIDTH // 2
-            rear_y = container_y + ELEM_HEIGHT + 20
-            pygame.draw.polygon(screen, TEXT_COLOR,
-                                [(rear_x, rear_y), (rear_x - 10, rear_y + 15), (rear_x + 10, rear_y + 15)])
-            lbl_rear = font_index.render("REAR", True, TEXT_COLOR)
-            screen.blit(lbl_rear, (rear_x - 15, rear_y + 20))
+            pygame.draw.line(screen, TEXT_COLOR, (top_x, top_y), (top_x + 30, top_y), 2)
+            top_lbl = font_ui.render("TOP", True, TEXT_COLOR)
+            screen.blit(top_lbl, (top_x + 35, top_y - 10))
 
         pygame.display.flip()
         clock.tick(60)

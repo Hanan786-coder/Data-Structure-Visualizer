@@ -4,11 +4,11 @@
 
 **A comprehensive platform for learning fundamental computer science concepts through step-by-step animated demonstrations.**
 
-## 🎯 Overview
+## Overview
 
 This visualizer is designed to help students, developers, and educators understand how data structures work and how algorithms execute. By providing interactive, real-time visualizations, it transforms abstract concepts into tangible, observable processes—making complex computer science fundamentals accessible and engaging.
 
-## ✨ Features
+## Features
 
 ### **Data Structures**
 - **Linked Lists**: Singly, Doubly, and Circular implementations
@@ -30,12 +30,12 @@ This visualizer is designed to help students, developers, and educators understa
 - **Mode Toggle**: Switch between different sorting modes (e.g., ascending/descending)
 - **Intuitive UI**: Clean, user-friendly interface with organized menu system
 
-## 📋 Requirements
+## Requirements
 
 - **Python** 3.13.5 or higher
 - **Pygame** 2.6.1
 
-## 🚀 Installation
+## Installation
 
 1. **Clone or download the project**:
 ```bash
@@ -52,7 +52,7 @@ Or install manually:
 pip install pygame==2.6.1
 ```
 
-## ▶️ Running the Application
+## Running the Application
 
 Execute the main application:
 ```bash
@@ -61,37 +61,44 @@ python main.py
 
 The visualizer will launch with an interactive menu. Use the buttons to navigate between different categories and select a data structure or algorithm to visualize.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 DSA Project/
 │
-├── Core Files
-│   ├── main.py                           # Application entry point & UI manager
-│   ├── requirements.txt                  # Project dependencies
+├── core/
 │   ├── Colors.py                         # Color palette & definitions
-│   ├── button_template.py                # Reusable button component
-│   └── ScienceGothic-Regular.ttf         # Custom typography
+│   └── button_template.py                # Reusable button component
 │
-├── Data Structures Visualizations
-│   ├── SinglyLinkedList.py               # Singly linked list with node operations
-│   ├── DoublyLinkedList.py               # Doubly linked list visualization
-│   ├── CircularLinkedList.py             # Circular linked list structure
-│   ├── queue_viz.py                      # Queue (FIFO) operations
-│   ├── circular_queue_viz.py             # Circular queue implementation
-│   ├── stack_viz.py                      # Stack (LIFO) operations
-│   ├── min_heap.py                       # Min-heap properties & heapify
-│   ├── max_heap.py                       # Max-heap properties & heapify
-│   └── tree2.py                          # Binary tree structure & traversals
+├── visualizations/
+│   ├── algorithms/
+│   │   ├── bubble_sort_viz.py            # Bubble sort with comparisons
+│   │   ├── insertion_sort.py             # Insertion sort implementation
+│   │   ├── mergesort.py                  # Merge sort with tree breakdown
+│   │   └── SelectionSort.py              # Selection sort with min/max modes
+│   │
+│   └── data_structures/
+│       ├── linked_lists/
+│       │   ├── CircularLinkedList.py     # Circular linked list structure
+│       │   ├── DoublyLinkedList.py       # Doubly linked list visualization
+│       │   └── SinglyLinkedList.py       # Singly linked list with node operations
+│       ├── queues/
+│       │   ├── circular_queue_viz.py     # Circular queue implementation
+│       │   └── queue_viz.py              # Queue (FIFO) operations
+│       ├── stack/
+│       │   └── stack_viz.py              # Stack (LIFO) operations
+│       └── trees_and_heaps/
+│           ├── max_heap.py               # Max-heap properties & heapify
+│           ├── min_heap.py               # Min-heap properties & heapify
+│           └── tree2.py                  # Binary tree structure & traversals
 │
-└── Sorting Algorithm Visualizations
-    ├── bubble_sort_viz.py                # Bubble sort with comparisons
-    ├── SelectionSort.py                  # Selection sort with min/max modes
-    ├── insertion_sort.py                 # Insertion sort implementation
-    └── mergesort.py                      # Merge sort with tree breakdown
+├── main.py                               # Application entry point & UI manager
+├── requirements.txt                      # Project dependencies
+├── ScienceGothic-Regular.ttf             # Custom typography
+└── README.md
 ```
 
-## 🎮 How to Use
+## How to Use
 
 ### Getting Started
 1. Run `python main.py` to launch the application
@@ -128,7 +135,7 @@ Control the visualization with these interactive buttons:
 | **← Back/Menu** | Return to previous menu |
 | **Mode Toggle** | Switch between sort directions (when available) |
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Component | Version/Details |
 |-----------|---|
@@ -137,7 +144,7 @@ Control the visualization with these interactive buttons:
 | **Architecture** | Object-Oriented Design (OOP) |
 | **Font** | ScienceGothic-Regular.ttf |
 
-## 📚 Learning Outcomes
+## Learning Outcomes
 
 Master these fundamental concepts through interactive visualization:
 
@@ -154,11 +161,11 @@ Master these fundamental concepts through interactive visualization:
 - Time complexity differences between algorithms
 - Practical efficiency impact on real-world scenarios
 
-## 👥 About the Project
+## About the Project
 
 This project was created as a collaborative effort to make learning data structures and algorithms more intuitive and engaging through interactive visualization.
 
-## 👨‍💻 Development Team
+## Development Team
 
 The following developers contributed to this project:
 
@@ -173,7 +180,7 @@ The following developers contributed to this project:
 
 <div align="center">
 
-**Happy Learning!** 🚀
+**Happy Learning!** 
 
 *Transform abstract concepts into visual experiences and master fundamental computer science principles.*
 

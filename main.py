@@ -1,7 +1,7 @@
 import pygame
 import sys
 import os
-import Colors
+from core import Colors
 import random
 import importlib.util
 
@@ -58,19 +58,19 @@ class Button:
 
 
 LINKED_LISTS = [
-    ("Singly Linked List", "SinglyLinkedList.py"),
-    ("Doubly Linked List", "DoublyLinkedList.py"),
-    ("Circular Linked List", "CircularLinkedList.py"),
+    ("Singly Linked List", "visualizations/data_structures/linked_lists/SinglyLinkedList.py"),
+    ("Doubly Linked List", "visualizations/data_structures/linked_lists/DoublyLinkedList.py"),
+    ("Circular Linked List", "visualizations/data_structures/linked_lists/CircularLinkedList.py"),
 ]
 
 QUEUES = [
-    ("Queue", "queue_viz.py"),
-    ("Circular Queue", "circular_queue_viz.py"),
+    ("Queue", "visualizations/data_structures/queues/queue_viz.py"),
+    ("Circular Queue", "visualizations/data_structures/queues/circular_queue_viz.py"),
 ]
 
 HEAPS = [
-    ("Min Heap", "min_heap.py"),
-    ("Max Heap", "max_heap.py"),
+    ("Min Heap", "visualizations/data_structures/trees_and_heaps/min_heap.py"),
+    ("Max Heap", "visualizations/data_structures/trees_and_heaps/max_heap.py"),
 ]
 
 # Updated DATA_STRUCTURES list to include Heaps
@@ -78,15 +78,15 @@ DATA_STRUCTURES = [
     ("Linked Lists", None),
     ("Queues", None),
     ("Heaps", None),  # <-- Added Heaps here
-    ("Stack", "stack_viz.py"),
-    ("Binary Tree", "tree2.py"),
+    ("Stack", "visualizations/data_structures/stack/stack_viz.py"),
+    ("Binary Tree", "visualizations/data_structures/trees_and_heaps/tree2.py"),
 ]
 
 ALGORITHMS = [
-    ("Bubble Sort", "bubble_sort_viz.py", "BubbleSortVisualizer"),
-    ("Selection Sort", "SelectionSort.py", "SelectionSortVisualizer"),
-    ("Insertion Sort", "insertion_sort.py", "InsertionSortVisualizer"),
-    ("Merge Sort", "mergesort.py", "MergeSortTreeVisualizer"),
+    ("Bubble Sort", "visualizations/algorithms/bubble_sort_viz.py", "BubbleSortVisualizer"),
+    ("Selection Sort", "visualizations/algorithms/SelectionSort.py", "SelectionSortVisualizer"),
+    ("Insertion Sort", "visualizations/algorithms/insertion_sort.py", "InsertionSortVisualizer"),
+    ("Merge Sort", "visualizations/algorithms/mergesort.py", "MergeSortTreeVisualizer"),
 ]
 
 

@@ -1,7 +1,7 @@
 import pygame
 import sys
 import math
-import Colors
+from core import Colors
 
 # -------------------------------------------------------------------------
 # CONFIGURATION & CONSTANTS
@@ -21,7 +21,7 @@ LIGHT_GREY = (238, 238, 238)  # Labels
 ERROR_COLOR = (255, 87, 87)
 SUCCESS_COLOR = (0, 200, 81)
 
-# MAX CAPACITY (Tree levels limit)
+# MAX CAPACITY (Tree levels limit for display)
 MAX_CAPACITY = 31
 
 # -------------------------------------------------------------------------
@@ -106,10 +106,10 @@ class InputBox:
         surface.blit(txt_surface, (self.rect.x + 10, self.rect.y + 10))
 
 # -------------------------------------------------------------------------
-# DATA STRUCTURE: MIN HEAP
+# DATA STRUCTURE: MAX HEAP
 # -------------------------------------------------------------------------
 
-class MinHeap:
+class MaxHeap:
     def __init__(self, capacity=15):
         self.heap = []
         self.capacity = capacity
@@ -140,41 +140,39 @@ class MinHeap:
         self.heap.append(val)
         index = len(self.heap) - 1
         
-        # MIN HEAP LOGIC: Bubble Up if Child < Parent
-        while index > 0 and self.heap[index] < self.heap[self.parent(index)]:
+        # Bubble Up (Max Heap: Child > Parent means swap)
+        while index > 0 and self.heap[index] > self.heap[self.parent(index)]:
             self.swap(index, self.parent(index))
             index = self.parent(index)
             
         return True, f"Inserted '{val}'."
 
-    def extract_min(self):
+    def extract_max(self):
         if not self.heap:
             return None, "Heap is Empty!"
         
-        min_item = self.heap[0]
+        max_item = self.heap[0]
         last_item = self.heap.pop()
         
         if self.heap:
             self.heap[0] = last_item
-            self.min_heapify(0)
+            self.max_heapify(0)
             
-        return min_item, f"Extracted Min: '{min_item}'."
+        return max_item, f"Extracted Max: '{max_item}'."
 
-    def min_heapify(self, i):
-        smallest = i
+    def max_heapify(self, i):
+        largest = i
         l = self.left(i)
         r = self.right(i)
         
-        # Find smallest among Root, Left, Right
-        if l < len(self.heap) and self.heap[l] < self.heap[smallest]:
-            smallest = l
+        if l < len(self.heap) and self.heap[l] > self.heap[largest]:
+            largest = l
+        if r < len(self.heap) and self.heap[r] > self.heap[largest]:
+            largest = r
             
-        if r < len(self.heap) and self.heap[r] < self.heap[smallest]:
-            smallest = r
-            
-        if smallest != i:
-            self.swap(i, smallest)
-            self.min_heapify(smallest)
+        if largest != i:
+            self.swap(i, largest)
+            self.max_heapify(largest)
 
     def peek(self):
         if not self.heap:
@@ -190,32 +188,28 @@ class MinHeap:
 
 def run(SCREEN):
     clock = pygame.time.Clock()
-    pq = MinHeap(capacity=15)
+    pq = MaxHeap(capacity=15)
     
-    # State Dictionary
+    # State Dictionary to manage scope
     state = {
-        "status_msg": "Min Heap Ready.",
+        "status_msg": "Max Heap Ready.",
         "msg_color": WHITE,
         "logic_msg": "Waiting for operation...",
         "peek_highlight": False,
         "peek_timer": 0
     }
-    
-    # --- UI LAYOUT ---
-    
-    # 1. Capacity Controls
+
+    # --- UI ELEMENTS ---
     input_cap = InputBox(50, 90, 80, 40, text="15", numeric_only=True, max_chars=2)
     btn_set = Button(140, 90, 100, 40, "Set Cap", "SET_CAP")
     
-    # 2. Main Inputs
     y_op = 160
     input_val = InputBox(50, y_op, 200, 40, max_chars=10, numeric_only=True)
     
-    # Buttons
     buttons = [
         btn_set,
         Button(270, y_op, 100, 40, "Insert", "INS"),
-        Button(390, y_op, 120, 40, "Extract Min", "EXT"), 
+        Button(390, y_op, 120, 40, "Extract Max", "EXT"),
         Button(530, y_op, 100, 40, "Peek", "PEEK"),
         Button(650, y_op, 100, 40, "Clear", "CLR"),
         Button(900, 15, 80, 40, "← Back", "BACK", color=ORANGE)
@@ -229,13 +223,14 @@ def run(SCREEN):
         state["logic_msg"] = logic
 
     def generate_tree_layout():
-        """ Calculate node coordinates for a perfect binary tree """
+        """ Calculate node coordinates for a perfect binary tree visualization """
         positions = {}
         start_y = 280
         level_height = 80 
         
         for i in range(MAX_CAPACITY):
             level = int(math.log2(i + 1))
+            # Calculate horizontal position based on level
             level_start_index = (1 << level) - 1
             pos_in_level = i - level_start_index
             nodes_in_level = 1 << level
@@ -278,7 +273,7 @@ def run(SCREEN):
             if val:
                 success, msg = pq.insert(val)
                 if success:
-                    set_status(msg, SUCCESS_COLOR, f"Insert {val} -> Bubble Up (if < Parent)")
+                    set_status(msg, SUCCESS_COLOR, f"Insert {val} -> Bubble Up if > Parent")
                     input_val.text = ""
                 else:
                     set_status(msg, ERROR_COLOR)
@@ -286,16 +281,16 @@ def run(SCREEN):
                 set_status("Enter a Value!", ERROR_COLOR)
 
         elif code == "EXT":
-            item, msg = pq.extract_min()
+            item, msg = pq.extract_max()
             if item is not None:
-                set_status(msg, SUCCESS_COLOR, "Swap Root/Last -> Remove -> Heapify Down")
+                set_status(msg, SUCCESS_COLOR, "Swap Root/Last -> Remove -> Max Heapify")
             else:
                 set_status(msg, ERROR_COLOR)
 
         elif code == "PEEK":
             item = pq.peek()
             if item is not None:
-                set_status(f"Min Value: {item}", ORANGE, "Root Node (Index 0)")
+                set_status(f"Max Value: {item}", ORANGE, "Root Node (Index 0)")
                 state["peek_highlight"] = True
                 state["peek_timer"] = pygame.time.get_ticks()
             else:
@@ -340,18 +335,20 @@ def run(SCREEN):
         SCREEN.fill(GREY_BG)
         
         # Header
-        title_surf = font_title.render("MIN HEAP", True, ORANGE)
+        title_surf = font_title.render("MAX HEAP", True, ORANGE)
         SCREEN.blit(title_surf, (50, 30))
         
-        # Controls
+        # Capacity UI
         lbl_cap = font_ui.render(f"Capacity (Max {MAX_CAPACITY}):", True, LIGHT_GREY)
         SCREEN.blit(lbl_cap, (50, 65))
         input_cap.draw(SCREEN)
         
+        # Value UI
         lbl_val = font_ui.render("Value (Int):", True, LIGHT_GREY)
         SCREEN.blit(lbl_val, (50, 135))
         input_val.draw(SCREEN)
         
+        # Buttons
         for btn in buttons:
             btn.draw(SCREEN)
             
@@ -392,8 +389,8 @@ def run(SCREEN):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for btn in buttons:
                     if btn.is_clicked(mouse_pos):
-                        result = execute_action(btn.action_code)
-                        if result == "back":
+                        action_result = execute_action(btn.action_code)
+                        if action_result == "back":
                             return "back"
 
         for btn in buttons:

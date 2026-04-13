@@ -1,11 +1,11 @@
 import pygame
 import sys
 import random
-import Colors
+from core import Colors  # Your custom colors file
 
 # --- Configuration ---
 SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 700  # Standardized height
+SCREEN_HEIGHT = 700 
 SIDEBAR_WIDTH = 300
 
 # Colors
@@ -13,11 +13,11 @@ BG_COLOR = Colors.GREY
 SIDEBAR_COLOR = (30, 30, 35)
 
 # Node Colors
-NODE_DEFAULT = Colors.TEAL          # Unsorted
-NODE_SORTED = (46, 204, 113)        # Green (Sorted portion)
-NODE_KEY = (255, 215, 0)            # Gold (The element currently being placed)
-NODE_COMPARE = (155, 89, 182)       # Purple (Element being compared against)
-NODE_SHIFT = (231, 76, 60)          # Red (Shift animation hint)
+NODE_DEFAULT = Colors.TEAL
+NODE_SPLIT = (70, 130, 180)    # Steel Blue (Just split)
+NODE_COMPARE = (255, 215, 0)   # Gold
+NODE_MERGING = (155, 89, 182)  # Purple (Moving up)
+NODE_SORTED = (46, 204, 113)   # Green
 
 TEXT_COLOR = Colors.LIGHT_GREY
 BUTTON_COLOR = Colors.TEAL
@@ -26,10 +26,11 @@ INPUT_BG = (50, 50, 55)
 ERROR_COLOR = (255, 87, 87)
 
 # Dimensions
-NODE_W = 60
-NODE_H = 50
-GAP = 15
-START_Y = 350  # Vertically centered
+NODE_W = 50
+NODE_H = 40
+GAP = 20
+START_Y = 100  
+LEVEL_HEIGHT = 100  # Vertical distance between recursion levels
 
 # --- Fonts ---
 def get_font(size, bold=False):
@@ -38,11 +39,12 @@ def get_font(size, bold=False):
     except FileNotFoundError:
         return pygame.font.SysFont('Arial', size, bold=bold)
 
+
 font_header = get_font(28, bold=True)
 font_ui = get_font(16)
-font_val = get_font(20, bold=True)
+font_val = get_font(18, bold=True)
 font_small = get_font(14)
-font_logic = get_font(18)
+font_logic = get_font(20)
 
 
 # --- UI Components ---
@@ -111,10 +113,9 @@ class Slider:
         self.val = initial
         self.dragging = False
         self.handle_rect = pygame.Rect(x, y - 5, 10, 30)
-        self.update_handle(initial)
+        self.update_handle()
 
-    def update_handle(self, val=None):
-        if val is not None: self.val = val
+    def update_handle(self):
         ratio = (self.val - self.min_val) / (self.max_val - self.min_val)
         self.handle_rect.centerx = self.rect.x + (self.rect.width * ratio)
 
@@ -142,7 +143,7 @@ class Slider:
 
 # --- Logic & State Management ---
 
-class InsertionSortVisualizer:
+class MergeSortTreeVisualizer:
     def __init__(self):
         self.initial_array = []
         self.history = []
@@ -152,9 +153,12 @@ class InsertionSortVisualizer:
         self.finished = False
         self.status_msg = "Welcome"
         self.status_color = TEXT_COLOR
+        self.sort_mode = "asc"
+
+        # State tracking for generation
+        self.active_chunks = []
         self.comps_count = 0
-        self.swaps_count = 0 
-        self.sort_mode = "asc"  # "asc" or "desc"
+        self.merges_count = 0
 
     def set_msg(self, msg, color=TEXT_COLOR):
         self.status_msg = msg
@@ -176,12 +180,12 @@ class InsertionSortVisualizer:
                 if p.strip():
                     val = int(p.strip())
                     new_arr.append(val)
-            if 2 <= len(new_arr) <= 12:
+            if 2 <= len(new_arr) <= 8:
                 self.initial_array = new_arr
                 self.set_msg("Manual Input Loaded", Colors.TEAL)
                 self.precompute_history()
             else:
-                self.set_msg("Error: Input count 2-12", ERROR_COLOR)
+                self.set_msg("Error: Input count must be 2-8", ERROR_COLOR)
         except ValueError:
             self.set_msg("Error: Numbers only", ERROR_COLOR)
 
@@ -190,82 +194,159 @@ class InsertionSortVisualizer:
         if self.initial_array:
             self.precompute_history()
 
-    def save_state(self, current_arr, colors, desc, active_key_idx=None, compare_idx=None):
+    def save_state(self, desc):
+        # Deep copy the chunks to save history
+        snapshot_chunks = []
+        for chunk in self.active_chunks:
+            snapshot_chunks.append({
+                'values': chunk['values'][:],
+                'colors': chunk['colors'][:],
+                'depth': chunk['depth'],
+                'abs_index': chunk['abs_index']
+            })
+
         self.history.append({
-            'values': current_arr[:],
-            'colors': colors[:],
-            'stats': (self.comps_count, self.swaps_count),
-            'desc': desc,
-            'key_idx': active_key_idx,    
-            'compare_idx': compare_idx    
+            'chunks': snapshot_chunks,
+            'stats': (self.comps_count, self.merges_count),
+            'desc': desc
         })
 
     def precompute_history(self):
         self.history = []
         self.comps_count = 0
-        self.swaps_count = 0
-        arr = self.initial_array[:]
-        n = len(arr)
-        
-        is_desc = self.sort_mode == "desc"
-        mode_label = "Descending" if is_desc else "Ascending"
+        self.merges_count = 0
 
-        # Initial State
-        colors = [NODE_DEFAULT] * n
-        colors[0] = NODE_SORTED 
-        self.save_state(arr, colors, f"Start ({mode_label}): First element sorted")
+        # Initial State: One chunk at depth 0
+        self.active_chunks = [{
+            'values': self.initial_array[:],
+            'colors': [NODE_DEFAULT] * len(self.initial_array),
+            'depth': 0,
+            'abs_index': 0 
+        }]
 
-        for i in range(1, n):
-            key = arr[i]
-            j = i - 1
-            
-            # Highlight the key being picked up
-            colors = [NODE_SORTED if x < i else NODE_DEFAULT for x in range(n)]
-            colors[i] = NODE_KEY
-            self.save_state(arr, colors, f"Pick up Key: {key}", active_key_idx=i)
+        mode_label = "Descending" if self.sort_mode == "desc" else "Ascending"
+        self.save_state(f"Start (Sort: {mode_label})")
 
-            while j >= 0:
-                self.comps_count += 1
-                
-                # Highlight comparison
-                colors[j] = NODE_COMPARE
-                self.save_state(arr, colors, f"Compare Key ({key}) vs {arr[j]}", active_key_idx=j+1, compare_idx=j)
+        # Recursion
+        self.split_merge_recursive(self.initial_array, 0, 0)
 
-                # Determine condition based on mode
-                # Ascending: Shift if key < arr[j]
-                # Descending: Shift if key > arr[j]
-                condition = key > arr[j] if is_desc else key < arr[j]
-                op_symbol = ">" if is_desc else "<"
+        # Final Sorted
+        if self.active_chunks:
+            self.active_chunks[0]['colors'] = [NODE_SORTED] * len(self.active_chunks[0]['values'])
+        self.save_state("Sorting Complete")
 
-                if condition:
-                    # Shift
-                    self.swaps_count += 1
-                    arr[j + 1] = arr[j]
-                    colors[j] = NODE_SHIFT 
-                    colors[j+1] = NODE_KEY 
-                    
-                    self.save_state(arr, colors, f"{key} {op_symbol} {arr[j]}. Shift {arr[j]} right.", active_key_idx=j, compare_idx=j+1)
-                    
-                    # Reset color after shift
-                    colors[j+1] = NODE_SORTED
-                    j -= 1
-                else:
-                    # Found position
-                    colors[j] = NODE_SORTED
-                    op_symbol = "<=" if is_desc else ">="
-                    self.save_state(arr, colors, f"{key} {op_symbol} {arr[j]}. Position found.", active_key_idx=j+1)
-                    break
-            
-            arr[j + 1] = key
-            
-            # Place Key
-            colors = [NODE_SORTED if x <= i else NODE_DEFAULT for x in range(n)]
-            self.save_state(arr, colors, f"Insert {key} at index {j+1}", active_key_idx=None)
-
-        # Final State
-        colors = [NODE_SORTED] * n
-        self.save_state(arr, colors, "Sorting Complete")
         self.reset()
+
+    def remove_chunk(self, depth, abs_index):
+        # Helper to remove a specific chunk from active list
+        for i, c in enumerate(self.active_chunks):
+            if c['depth'] == depth and c['abs_index'] == abs_index:
+                self.active_chunks.pop(i)
+                return
+
+    def split_merge_recursive(self, arr, depth, abs_idx):
+        if len(arr) <= 1:
+            return arr
+
+        mid = len(arr) // 2
+        left_part = arr[:mid]
+        right_part = arr[mid:]
+
+        # --- SPLIT ANIMATION ---
+
+        # 1. Identify Parent Chunk to remove
+        self.remove_chunk(depth, abs_idx)
+
+        # 2. Add two Children Chunks at depth + 1
+        # Left Child
+        self.active_chunks.append({
+            'values': left_part[:],
+            'colors': [NODE_SPLIT] * len(left_part),
+            'depth': depth + 1,
+            'abs_index': abs_idx
+        })
+        # Right Child
+        self.active_chunks.append({
+            'values': right_part[:],
+            'colors': [NODE_SPLIT] * len(right_part),
+            'depth': depth + 1,
+            'abs_index': abs_idx + mid
+        })
+
+        self.save_state(f"Split [{arr[0]}...{arr[-1]}] into two levels")
+
+        # Color reset after split highlight
+        for c in self.active_chunks:
+            if c['depth'] == depth + 1 and c['abs_index'] in [abs_idx, abs_idx + mid]:
+                c['colors'] = [NODE_DEFAULT] * len(c['values'])
+
+        # Recurse
+        sorted_left = self.split_merge_recursive(left_part, depth + 1, abs_idx)
+        sorted_right = self.split_merge_recursive(right_part, depth + 1, abs_idx + mid)
+
+        # --- MERGE LOGIC ---
+        merged = []
+        i = j = 0
+
+        while i < len(sorted_left) and j < len(sorted_right):
+            self.comps_count += 1
+
+            # Highlight Comparison in the children chunks
+            left_chunk = next(c for c in self.active_chunks if c['depth'] == depth + 1 and c['abs_index'] == abs_idx)
+            right_chunk = next(
+                c for c in self.active_chunks if c['depth'] == depth + 1 and c['abs_index'] == abs_idx + mid)
+
+            left_chunk['colors'][i] = NODE_COMPARE
+            right_chunk['colors'][j] = NODE_COMPARE
+            self.save_state(f"Comparing {sorted_left[i]} vs {sorted_right[j]}")
+
+            is_desc = self.sort_mode == "desc"
+            condition = sorted_left[i] > sorted_right[j] if is_desc else sorted_left[i] < sorted_right[j]
+            
+            if condition:
+                merged.append(sorted_left[i])
+                left_chunk['colors'][i] = NODE_MERGING
+                i += 1
+            else:
+                merged.append(sorted_right[j])
+                right_chunk['colors'][j] = NODE_MERGING
+                j += 1
+
+            move_direction = "larger" if is_desc else "smaller"
+            self.save_state(f"Moving {move_direction} element up")
+
+            # Reset colors
+            if i < len(left_chunk['colors']): left_chunk['colors'][i] = NODE_DEFAULT
+            if j < len(right_chunk['colors']): right_chunk['colors'][j] = NODE_DEFAULT
+
+        # Remaining
+        while i < len(sorted_left):
+            merged.append(sorted_left[i])
+            i += 1
+        while j < len(sorted_right):
+            merged.append(sorted_right[j])
+            j += 1
+
+        # --- MERGE ANIMATION (Move Up) ---
+        self.merges_count += 1
+
+        # Remove the two children
+        self.remove_chunk(depth + 1, abs_idx)
+        self.remove_chunk(depth + 1, abs_idx + mid)
+
+        # Add parent back (Sorted)
+        self.active_chunks.append({
+            'values': merged[:],
+            'colors': [NODE_SORTED] * len(merged),
+            'depth': depth,
+            'abs_index': abs_idx
+        })
+        self.save_state(f"Merged & Sorted range depth {depth}")
+
+        # Fade back to teal
+        self.active_chunks[-1]['colors'] = [NODE_DEFAULT] * len(merged)
+
+        return merged
 
     def reset(self):
         self.step_index = 0
@@ -303,14 +384,13 @@ class InsertionSortVisualizer:
             return
 
         state = self.history[self.step_index]
-        vals = state['values']
-        cols = state['colors']
-        key_idx = state['key_idx']
-        
-        # Centering
-        total_w = len(vals) * (NODE_W + GAP) - GAP
-        start_x = SIDEBAR_WIDTH + (SCREEN_WIDTH - SIDEBAR_WIDTH - total_w) // 2
-        
+        chunks = state['chunks']
+
+        # Determine Global Centering based on initial Array Size
+        total_slots = len(self.initial_array)
+        full_width = total_slots * (NODE_W + GAP) - GAP
+        viz_start_x = SIDEBAR_WIDTH + (SCREEN_WIDTH - SIDEBAR_WIDTH - full_width) // 2
+
         # --- Logic Flow Text ---
         label_x = SIDEBAR_WIDTH + 40
         label_y = 30
@@ -318,37 +398,40 @@ class InsertionSortVisualizer:
         desc_surf = font_logic.render(f"> {state['desc']}", True, Colors.TEAL_BRIGHT)
         surface.blit(desc_surf, (label_x, label_y + 25))
 
-        # --- Draw Nodes ---
-        for i, val in enumerate(vals):
-            x = start_x + i * (NODE_W + GAP)
-            y = START_Y
-            
-            # If this is the active key, lift it up visually
-            if key_idx is not None and i == key_idx:
-                y -= 80 # Lift height
-                
-            rect = pygame.Rect(x, y, NODE_W, NODE_H)
-            
-            # Shadow for lifted node
-            if key_idx is not None and i == key_idx:
-                shadow_rect = pygame.Rect(x + 5, START_Y + 45, NODE_W - 10, 10)
-                pygame.draw.ellipse(surface, (20, 20, 25), shadow_rect)
-            
-            pygame.draw.rect(surface, cols[i], rect, border_radius=8)
-            pygame.draw.rect(surface, (200, 200, 200) if cols[i] == NODE_KEY else (30,30,30), rect, 2, border_radius=8)
-            
-            txt = font_val.render(str(val), True, (255, 255, 255) if cols[i] != NODE_KEY else (0,0,0))
-            surface.blit(txt, txt.get_rect(center=rect.center))
-            
-            # Draw Index below
-            idx_txt = font_small.render(str(i), True, (100,100,100))
-            surface.blit(idx_txt, idx_txt.get_rect(center=(rect.centerx, START_Y + NODE_H + 15)))
+        # --- Draw Chunks ---
+        for chunk in chunks:
+            depth = chunk['depth']
+            abs_idx = chunk['abs_index']
+            vals = chunk['values']
+            colors = chunk['colors']
+
+            # Calculate Y based on Depth
+            y_pos = START_Y + (depth * LEVEL_HEIGHT)
+
+            # Calculate X based on Absolute Index
+            x_start = viz_start_x + abs_idx * (NODE_W + GAP)
+
+            for i, val in enumerate(vals):
+                cx = x_start + i * (NODE_W + GAP)
+                rect = pygame.Rect(cx, y_pos, NODE_W, NODE_H)
+
+                pygame.draw.rect(surface, colors[i], rect, border_radius=6)
+                pygame.draw.rect(surface, (20, 20, 20), rect, 2, border_radius=6)
+
+                txt = font_val.render(str(val), True, (255, 255, 255))
+                surface.blit(txt, txt.get_rect(center=rect.center))
+
+                # Draw lines connecting to parent (Visual Tree lines)
+                if depth > 0:
+                    parent_y = y_pos - LEVEL_HEIGHT + NODE_H
+                    # Just a simple line up
+                    pygame.draw.line(surface, (60, 60, 60), (rect.centerx, y_pos), (rect.centerx, parent_y), 1)
 
 
 # --- Main Run Function ---
 def run(screen):
     clock = pygame.time.Clock()
-    viz = InsertionSortVisualizer()
+    viz = MergeSortTreeVisualizer()
 
     # --- Actions ---
     def btn_rand_action():
@@ -359,7 +442,7 @@ def run(screen):
             viz.set_msg("Size must be number", ERROR_COLOR)
 
     def btn_load_action(): viz.load_manual(input_box.text)
-    def btn_mode_action(): viz.toggle_sort_mode()
+    def btn_sort_mode_action(): viz.toggle_sort_mode()
     def btn_prev_action(): viz.prev_step(); viz.playing = False
     def btn_play_action(): viz.toggle_play()
     def btn_next_action(): viz.next_step(); viz.playing = False
@@ -367,14 +450,12 @@ def run(screen):
     def go_back(): return "back"
 
     # Layout
-    size_input = InputBox(20, 75, 50, 35, text="8", numeric_only=True, max_chars=2)
-    btn_rand = Button(80, 75, 200, 35, "Randomize (Size 2-12)", btn_rand_action)
-    input_box = InputBox(20, 145, 190, 35, text="")
-    btn_load = Button(220, 145, 60, 35, "Load", btn_load_action)
-
-    # Sort Mode Button
-    btn_mode = Button(20, 185, 260, 35, "Sort: Ascending ↑", btn_mode_action, color=Colors.ORANGE)
-
+    size_input = InputBox(20, 75, 50, 35, text="6", numeric_only=True, max_chars=1)
+    btn_rand = Button(80, 75, 200, 35, "Randomize (Size 2-8)", btn_rand_action)
+    input_box = InputBox(20, 128, 190, 35, text="")
+    btn_load = Button(220, 128, 60, 35, "Load", btn_load_action)
+    btn_sort_mode = Button(20, 185, 260, 35, "Sort: Ascending ↑", btn_sort_mode_action)
+    
     btn_prev = Button(20, 240, 80, 40, "Prev", btn_prev_action)
     btn_play = Button(110, 240, 80, 40, "Play/||", btn_play_action)
     btn_next = Button(200, 240, 80, 40, "Next", btn_next_action)
@@ -382,12 +463,13 @@ def run(screen):
     
     btn_back = Button(900, 15, 80, 40, "← Back", go_back, color=Colors.ORANGE)
     
-    speed_slider = Slider(20, 360, 260, 50, 1000, 300)
+    speed_slider = Slider(20, 360, 260, 50, 1000, 500)
 
-    ui_elements = [size_input, btn_rand, input_box, btn_load, btn_mode, 
+    # Group UI Elements for Loop
+    ui_elements = [size_input, btn_rand, input_box, btn_load, btn_sort_mode, 
                    btn_prev, btn_play, btn_next, btn_reset, btn_back, speed_slider]
 
-    viz.generate_random(8)
+    viz.generate_random(6)
 
     # --- Main Loop ---
     running = True
@@ -423,13 +505,13 @@ def run(screen):
         pygame.draw.rect(screen, SIDEBAR_COLOR, sidebar_rect)
         pygame.draw.line(screen, Colors.TEAL, (SIDEBAR_WIDTH, 0), (SIDEBAR_WIDTH, SCREEN_HEIGHT), 2)
 
-        screen.blit(font_header.render("Insertion Sort", True, Colors.TEAL), (20, 20))
-        screen.blit(font_small.render("1. Array Size (2-12):", True, TEXT_COLOR), (20, 55))
-        screen.blit(font_small.render("2. Manual Input :", True, TEXT_COLOR), (20, 125))
-        screen.blit(font_small.render("3. Controls:", True, TEXT_COLOR), (20, 220))
+        screen.blit(font_header.render("Merge Sort", True, Colors.TEAL), (20, 20))
+        screen.blit(font_small.render("1. Array Size (2-8):", True, TEXT_COLOR), (20, 55))
+        screen.blit(font_small.render("2. Manual Input :", True, TEXT_COLOR), (20, 108))
+        screen.blit(font_small.render("3. Sort Order:", True, TEXT_COLOR), (20, 165))
+        screen.blit(font_small.render("4. Controls:", True, TEXT_COLOR), (20, 220))
 
-        # Dynamic Button Text
-        btn_mode.text = "Mode: Desc" if viz.sort_mode == "desc" else "Mode: Asc"
+        btn_sort_mode.text = "Mode: Desc" if viz.sort_mode == "desc" else "Mode: Asc"
 
         for el in ui_elements: el.draw(screen)
 
@@ -439,16 +521,16 @@ def run(screen):
         pygame.draw.line(screen, (50, 50, 50), (20, 430), (280, 430), 1)
         screen.blit(font_val.render("Statistics", True, TEXT_COLOR), (20, 440))
 
-        c_comps, c_swaps = 0, 0
+        c_comps, c_merges = 0, 0
         if viz.history:
-            c_comps, c_swaps = viz.history[viz.step_index]['stats']
+            c_comps, c_merges = viz.history[viz.step_index]['stats']
 
         stats_info = [
             f"Comparisons: {c_comps}",
-            f"Shifts: {c_swaps}",
+            f"Merges: {c_merges}",
             f"Step: {viz.step_index + 1} / {len(viz.history)}",
-            "Complexity: O(n^2)",
-            "Type: In-Place Stable"
+            "Complexity: O(n log n)",
+            "Structure: Recursive Tree"
         ]
         for i, txt in enumerate(stats_info):
             col = Colors.ORANGE if i < 3 else TEXT_COLOR
@@ -457,7 +539,7 @@ def run(screen):
         viz.draw_viz(screen)
 
         # Legend
-        leg_y = SCREEN_HEIGHT - 60 
+        leg_y = SCREEN_HEIGHT - 40
         leg_x = SIDEBAR_WIDTH + 50
 
         def draw_legend(x, color, text):
@@ -465,12 +547,12 @@ def run(screen):
             pygame.draw.rect(screen, color, r, border_radius=4)
             t = font_small.render(text, True, TEXT_COLOR)
             screen.blit(t, (x + 30, leg_y + 2))
-            return x + 120
+            return x + 110
 
-        lx = draw_legend(leg_x, NODE_SORTED, "Sorted")
-        lx = draw_legend(lx, NODE_KEY, "Key (Insert)")
+        lx = draw_legend(leg_x, NODE_SPLIT, "Split")
         lx = draw_legend(lx, NODE_COMPARE, "Compare")
-        lx = draw_legend(lx, NODE_SHIFT, "Shift")
+        lx = draw_legend(lx, NODE_SORTED, "Sorted")
+        lx = draw_legend(lx, NODE_MERGING, "Merging")
 
         pygame.display.flip()
         clock.tick(60)

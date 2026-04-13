@@ -1,5 +1,5 @@
 import pygame
-import Colors
+from core import Colors
 
 class Button:
     def __init__(self, x, y, w, h, text, action_code, txt_size):

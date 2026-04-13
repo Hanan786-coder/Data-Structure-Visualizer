@@ -1,7 +1,7 @@
 import pygame
 import sys
 import random
-import Colors
+from core import Colors
 
 # --- Configuration ---
 SCREEN_WIDTH = 1000

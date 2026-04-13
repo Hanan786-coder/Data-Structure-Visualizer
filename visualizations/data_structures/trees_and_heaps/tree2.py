@@ -1,6 +1,6 @@
 import pygame
 import sys
-import Colors
+from core import Colors
 
 # -----------------------------------------------------------------------------
 # 1) CONFIGURATION & CONSTANTS

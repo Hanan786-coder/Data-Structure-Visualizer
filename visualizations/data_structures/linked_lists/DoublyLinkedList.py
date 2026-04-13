@@ -1,6 +1,6 @@
 import pygame
-from button_template import Button
-import Colors
+from core.button_template import Button
+from core import Colors
 
 
 # Font config and sizes
