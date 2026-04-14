@@ -3,8 +3,9 @@ import sys
 from core import Colors
 
 # --- Configuration ---
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 700
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
 
 # Map Colors
 BACKGROUND_COLOR = Colors.GREY
@@ -191,7 +192,7 @@ def run(screen):
     btn_push = Button(200, 180, 100, 40, "Push", push_item)
     btn_pop = Button(50, 240, 120, 50, "Pop", pop_item)
     btn_top = Button(180, 240, 120, 50, "Top", top_item)
-    btn_back = Button(900, 15, 80, 40, "← Back", go_back)
+    btn_back = Button(SCREEN_WIDTH - 100, 15, 80, 40, "← Back", go_back)
 
     buttons = [btn_set_cap, btn_push, btn_pop, btn_top, btn_back]
     input_boxes = [val_input, cap_input]

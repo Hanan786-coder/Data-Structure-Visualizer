@@ -5,9 +5,11 @@ from core import Colors
 import random
 import importlib.util
 
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 700
-SIDEBAR_WIDTH = 300
+pygame.init()
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
+SIDEBAR_WIDTH = int(SCREEN_WIDTH * 0.3)
 
 BG_COLOR = Colors.GREY
 SIDEBAR_COLOR = (30, 30, 35)
@@ -15,8 +17,7 @@ TEXT_COLOR = Colors.LIGHT_GREY
 BUTTON_COLOR = Colors.TEAL
 BUTTON_HOVER = Colors.TEAL_BRIGHT
 
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Data Structure & Algorithm Visualizer")
 clock = pygame.time.Clock()
 
@@ -102,9 +103,13 @@ class MainApp:
         self.state = "home"
         self.current_viz = None
         self.buttons = [
-            Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 100, 300, 80, "Data Structures", self.show_data_structures, Colors.TEAL),
-            Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 + 50, 300, 80, "Algorithms", self.show_algorithms, Colors.TEAL),
+            Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 150, 300, 80, "Data Structures", self.show_data_structures, Colors.TEAL),
+            Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 , 300, 80, "Algorithms", self.show_algorithms, Colors.TEAL),
+            Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 + 150, 300, 80, "Exit", self.exit_program, Colors.RED),
         ]
+
+    def exit_program(self):
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     def show_data_structures(self):
         self.state = "list"
@@ -234,7 +239,6 @@ class MainApp:
 
     def draw_home(self):
         screen.fill(BG_COLOR)
-        pygame.draw.rect(screen, SIDEBAR_COLOR, pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
 
         title = font_header.render("Data Structures & Algorithms", True, Colors.TEAL_BRIGHT)
         title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 80))
@@ -295,6 +299,8 @@ class MainApp:
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return False
             for btn in self.buttons:
                 btn.handle_event(event)

@@ -92,7 +92,7 @@ status_color = Colors.LIGHT_GREY
 
 # Text rendering
 title = titleFont.render("Singly Linked List", True, Colors.TEAL)
-cap_value_txt = paraFont.render("Capacity (Max 6): ", True, Colors.LIGHT_GREY)
+cap_value_txt = paraFont.render("Capacity (Max 10): ", True, Colors.LIGHT_GREY)
 value_txt_1 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
 value_txt_2 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
 pos_txt_1 = paraFont.render("Pos: ", True, Colors.LIGHT_GREY)
@@ -110,22 +110,24 @@ def set_status(message, color, logic_message=""):
 
 
 def update_status_ui(screen):
+    W, H = screen.get_size()
+    sx, sy = W / 1000.0, H / 700.0
     # Clear the area where status text is drawn to prevent overlap during animations
-    pygame.draw.rect(screen, Colors.GREY, (480, 50, 450, 100))
+    pygame.draw.rect(screen, Colors.GREY, (int(480*sx), int(50*sy), int(450*sx), int(100*sy)))
 
     logic_lbl = statFont.render("Logic Flow: ", True, Colors.LIGHT_GREY)
-    screen.blit(logic_lbl, (500, 90))
+    screen.blit(logic_lbl, (int(500*sx), int(90*sy)))
 
     logic_txt = logicFont.render(f"{logic_msg}", True, Colors.TEAL_BRIGHT)
-    screen.blit(logic_txt, (500, 115))
+    screen.blit(logic_txt, (int(500*sx), int(115*sy)))
 
     status_surf = nodeFont.render(status_msg, True, status_color)
-    screen.blit(status_surf, (500, 50))
+    screen.blit(status_surf, (int(500*sx), int(50*sy)))
 
 
 # Input Bar Class
 class InputBar:
-    def __init__(self, x, y, width, height, bg_color, max_chars=1):
+    def __init__(self, x, y, width, height, bg_color, max_chars=2):
         self.shape = pygame.Rect(x, y, width, height)
         self.bg_color = bg_color
         self.inactive_color = Colors.LIGHT_GREY
@@ -134,7 +136,7 @@ class InputBar:
         self.active = False
         self.text = ""
         self.max_chars = max_chars
-        self.input_font = get_font(19)
+        self.input_font = get_font(23)
         self.text_rendered = self.input_font.render(self.text, True, Colors.LIGHT_GREY)
 
     def handle_input(self, event):
@@ -234,22 +236,26 @@ def draw_pointer_on_head(node, text, color, screen):
 
 # Linked Lists class
 class SLL:
-    def __init__(self, size, head=None):
+    def __init__(self, size, screen_w=1000, screen_h=700, head=None):
         # Logical terms
         self.head = head
         self.size = size
         self.length = 1
         self.tail = None
 
-        # UI terms
-        self.initialPos = {
-            1: (400, 480),
-            2: (350, 480),
-            3: (300, 480),
-            4: (250, 480),
-            5: (160, 480),
-            6: (90, 480),
-        }
+        # Screen dimensions for responsive layout
+        self.screen_w = screen_w
+        self.screen_h = screen_h
+        self.clear_y = int(screen_h * 0.529)  # scaled from 370/700
+
+        # UI terms - compute node positions based on screen size
+        node_y = int(screen_h * 0.686)  # scaled from 480/700
+        self.initialPos = {}
+        for s in range(1, 11):
+            chain_w = s * 125 + 30
+            start_x = max(30, (screen_w - chain_w) // 2)
+            self.initialPos[s] = (start_x, node_y)
+
         self.currentPos = self.initialPos[self.size]
         self.nodes = []  # For drawing
 
@@ -271,7 +277,7 @@ class SLL:
         # Clear previous list
         rect_x = self.initialPos[self.size][0]
         rect_y = self.initialPos[self.size][1]
-        clear_rect = pygame.Rect(rect_x, rect_y, 1000, 150)
+        clear_rect = pygame.Rect(rect_x, rect_y, self.screen_w, self.screen_h - rect_y)
         pygame.draw.rect(screen, Colors.GREY, clear_rect)
 
         # New List
@@ -300,7 +306,7 @@ class SLL:
             set_status("Shifting Nodes...", Colors.ORANGE, "> Shifting existing nodes right")
 
             # Clear the list area
-            pygame.draw.rect(screen, Colors.GREY, (0, 370, 1000, 280))
+            pygame.draw.rect(screen, Colors.GREY, (0, self.clear_y, self.screen_w, self.screen_h - self.clear_y))
 
             # Shift coordinates
             for node in self.nodes:
@@ -325,7 +331,7 @@ class SLL:
 
         self.currentPos = (self.currentPos[0] + 125, self.currentPos[1])
 
-        pygame.draw.rect(screen, Colors.GREY, (0, 370, 1000, 280))
+        pygame.draw.rect(screen, Colors.GREY, (0, self.clear_y, self.screen_w, self.screen_h - self.clear_y))
         self.drawList(screen)
 
         set_status("New Node Inserted!", Colors.GREEN, "> newNode.next = head")
@@ -340,7 +346,7 @@ class SLL:
             self.tail = newNode
 
         set_status("Head Updated!", Colors.GREEN, "> head = newNode")
-        pygame.draw.rect(screen, Colors.GREY, (0, 370, 1000, 280))
+        pygame.draw.rect(screen, Colors.GREY, (0, self.clear_y, self.screen_w, self.screen_h - self.clear_y))
         self.drawList(screen)
 
         update_status_ui(screen)
@@ -452,7 +458,7 @@ class SLL:
         # Clear previous list
         rect_x = self.initialPos[self.size][0]
         rect_y = self.initialPos[self.size][1]
-        clear_rect = pygame.Rect(rect_x, rect_y, 1000, 150)
+        clear_rect = pygame.Rect(rect_x, rect_y, self.screen_w, self.screen_h - rect_y)
         pygame.draw.rect(screen, Colors.GREY, clear_rect)
 
         # New List
@@ -594,7 +600,7 @@ class SLL:
             self.tail = newNode
 
         # Redraw List
-        pygame.draw.rect(screen, Colors.GREY, (0, 370, 1000, 350))
+        pygame.draw.rect(screen, Colors.GREY, (0, self.clear_y, self.screen_w, self.screen_h - self.clear_y))
         self.drawList(screen)
 
         if temp == self.head:
@@ -828,7 +834,7 @@ class SLL:
                 self.nodes.pop(0)
             self.length -= 1
 
-            pygame.draw.rect(screen, Colors.GREY, (0, 360, 1000, 320))
+            pygame.draw.rect(screen, Colors.GREY, (0, self.clear_y, self.screen_w, self.screen_h - self.clear_y))
             self.drawList(screen)
 
             if self.head:
@@ -847,6 +853,9 @@ class SLL:
         update_status_ui(screen)
         pygame.display.update()
 def run(screen):
+    W, H = screen.get_size()
+    sx, sy = W / 1000.0, H / 700.0
+
     # Font loaders
     titleFont = get_font(40)
     paraFont = get_font(17)
@@ -858,7 +867,7 @@ def run(screen):
 
     # Text rendering
     title = titleFont.render("Singly Linked List", True, Colors.TEAL)
-    cap_value_txt = paraFont.render("Capacity (Max 6): ", True, Colors.LIGHT_GREY)
+    cap_value_txt = paraFont.render("Capacity (Max 10): ", True, Colors.LIGHT_GREY)
     value_txt_1 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
     value_txt_2 = paraFont.render("Value: ", True, Colors.LIGHT_GREY)
     pos_txt_1 = paraFont.render("Pos: ", True, Colors.LIGHT_GREY)
@@ -867,37 +876,37 @@ def run(screen):
     status_msg = "Ready"
     logic_msg = "Waiting for a operation..."
 
-    cap_bar = InputBar(100, 145, 130, 40, Colors.BLACK)
+    cap_bar = InputBar(int(100*sx), int(145*sy), int(130*sx), int(40*sy), Colors.BLACK)
     cap_bar.text = "6"
-    node_bar = InputBar(100, 230, 130, 40, Colors.BLACK, 4)
-    pos_insert_bar = InputBar(100, 315, 130, 40, Colors.BLACK, 2)
-    pos_delete_bar = InputBar(380, 315, 130, 40, Colors.BLACK, 2)
-    search_val_bar = InputBar(660, 315, 120, 40, Colors.BLACK, 2)
+    node_bar = InputBar(int(100*sx), int(230*sy), int(130*sx), int(40*sy), Colors.BLACK, 4)
+    pos_insert_bar = InputBar(int(100*sx), int(315*sy), int(130*sx), int(40*sy), Colors.BLACK, 2)
+    pos_delete_bar = InputBar(int(380*sx), int(315*sy), int(130*sx), int(40*sy), Colors.BLACK, 2)
+    search_val_bar = InputBar(int(660*sx), int(315*sy), int(120*sx), int(40*sy), Colors.BLACK, 2)
 
-    set_max_button = Button(240, 145, 120, 40, "Set Max", None, 18)
-    insert_tail_button = Button(240, 230, 120, 40, "Insert Tail", None, 18)
-    insert_head_button = Button(370, 230, 120, 40, "Insert Head", None, 18)
-    insert_at_pos_button = Button(240, 315, 120, 40, "Insert", None, 18)
-    delete_head_button = Button(500, 170, 130, 50, "Delete Head", None, 18)
-    delete_tail_button = Button(640, 170, 130, 50, "Delete Tail", None, 18)
-    destroy_button = Button(780, 170, 130, 50, "Destroy List", None, 18)
-    delete_at_pos_button = Button(520, 315, 120, 40, "Delete", None, 18)
-    search_button = Button(790, 315, 120, 40, "Search", None, 18)
-    back_button = Button(930, 15, 70, 35, "← Back", None, 18)
+    set_max_button = Button(int(240*sx), int(145*sy), int(120*sx), int(40*sy), "Set Max", None, 18)
+    insert_tail_button = Button(int(240*sx), int(230*sy), int(120*sx), int(40*sy), "Insert Tail", None, 18)
+    insert_head_button = Button(int(370*sx), int(230*sy), int(120*sx), int(40*sy), "Insert Head", None, 18)
+    insert_at_pos_button = Button(int(240*sx), int(315*sy), int(120*sx), int(40*sy), "Insert", None, 18)
+    delete_head_button = Button(int(500*sx), int(170*sy), int(130*sx), int(50*sy), "Delete Head", None, 18)
+    delete_tail_button = Button(int(640*sx), int(170*sy), int(130*sx), int(50*sy), "Delete Tail", None, 18)
+    destroy_button = Button(int(780*sx), int(170*sy), int(130*sx), int(50*sy), "Destroy List", None, 18)
+    delete_at_pos_button = Button(int(520*sx), int(315*sy), int(120*sx), int(40*sy), "Delete", None, 18)
+    search_button = Button(int(790*sx), int(315*sy), int(120*sx), int(40*sy), "Search", None, 18)
+    back_button = Button(W - int(70*sx), int(15*sy), int(70*sx), int(35*sy), "← Back", None, 18)
 
-    sll = SLL(6)
+    sll = SLL(6, W, H)
     running = True
     clock = pygame.time.Clock()
 
     while running:
         screen.fill(Colors.GREY)
         
-        screen.blit(title, (50, 40))
-        screen.blit(cap_value_txt, (100, 115))
-        screen.blit(value_txt_1, (100, 200))
-        screen.blit(value_txt_2, (660, 285))
-        screen.blit(pos_txt_1, (100, 285))
-        screen.blit(pos_txt_2, (380, 285))
+        screen.blit(title, (int(50*sx), int(40*sy)))
+        screen.blit(cap_value_txt, (int(100*sx), int(115*sy)))
+        screen.blit(value_txt_1, (int(100*sx), int(200*sy)))
+        screen.blit(value_txt_2, (int(660*sx), int(285*sy)))
+        screen.blit(pos_txt_1, (int(100*sx), int(285*sy)))
+        screen.blit(pos_txt_2, (int(380*sx), int(285*sy)))
 
         set_max_button.draw(screen)
         delete_head_button.draw(screen)
@@ -937,7 +946,7 @@ def run(screen):
                     set_status("Value Empty!", Colors.RED, "> Enter Value to Insert")
 
             if set_max_button.is_clicked(event):
-                if cap_value_txt != "" and 6 >= int(cap_bar.text) > 0:
+                if cap_value_txt != "" and 10 >= int(cap_bar.text) > 0:
                     sll.size = int(cap_bar.text)
                     sll.nodes.clear()
                     sll.currentPos = sll.initialPos[sll.size]
@@ -945,8 +954,8 @@ def run(screen):
                     set_status("Capacity Updated!", Colors.GREEN, f"> size = {cap_bar.text}")
                 elif cap_bar.text == "":
                     set_status("Capacity can't be empty!", Colors.RED, "> cap_value != ''")
-                elif int(cap_bar.text) > 6:
-                    set_status("Capacity should be < 6", Colors.RED, "> ")
+                elif int(cap_bar.text) > 10:
+                    set_status("Capacity should be < 10", Colors.RED, "> ")
                 else:
                     set_status("Invalid Capacity!", Colors.RED, "> ")
 

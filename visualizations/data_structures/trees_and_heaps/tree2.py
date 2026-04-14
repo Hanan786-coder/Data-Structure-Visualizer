@@ -7,7 +7,10 @@ from core import Colors
 # -----------------------------------------------------------------------------
 
 # Window Dimensions
-WIDTH, HEIGHT = 1000, 700
+import pygame
+info = pygame.display.Info()
+WIDTH = info.current_w
+HEIGHT = info.current_h
 
 # Color Constants
 ORANGE = (255, 108, 12)  # Highlight / Important
@@ -160,7 +163,7 @@ def run(screen):
         Button(50, 360, 140, 40, "Traverse", "TRAVERSE"),
         Button(50, 410, 140, 40, "Balance", "BALANCE"),
         Button(50, 480, 140, 40, "Clear Tree", "CLEAR"),
-        Button(900, 20, 80, 40, "Back", "BACK")
+        Button(WIDTH - 100, 20, 80, 40, "Back", "BACK")
     ]
 
     # --- Helper Functions ---

@@ -7,8 +7,10 @@ from core import Colors
 # CONFIGURATION & CONSTANTS
 # -------------------------------------------------------------------------
 
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 700
+import pygame
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
 
 # 🔷 COLORS
 ORANGE = (255, 108, 12)       # Title & Highlight
@@ -206,15 +208,20 @@ def run(SCREEN):
     y_op = 160
     input_val = InputBox(50, y_op, 200, 40, max_chars=10, numeric_only=True)
     
+    # Calculate dynamic spacing for buttons
+    btn_start_x = 280
+    available_width = SCREEN_WIDTH - btn_start_x - 100
+    spacing = available_width // 4
+
     buttons = [
         btn_set,
-        Button(270, y_op, 100, 40, "Insert", "INS"),
-        Button(390, y_op, 120, 40, "Extract Max", "EXT"),
-        Button(530, y_op, 100, 40, "Peek", "PEEK"),
-        Button(650, y_op, 100, 40, "Clear", "CLR"),
-        Button(900, 15, 80, 40, "← Back", "BACK", color=ORANGE)
+        Button(btn_start_x, y_op, 120, 40, "Insert", "INS"),
+        Button(btn_start_x + spacing, y_op, 140, 40, "Extract Max", "EXT"),
+        Button(btn_start_x + 2 * spacing, y_op, 100, 40, "Peek", "PEEK"),
+        Button(btn_start_x + 3 * spacing, y_op, 100, 40, "Clear", "CLR"),
+        Button(SCREEN_WIDTH - 100, 15, 80, 40, "← Back", "BACK", color=ORANGE)
     ]
-    
+
     input_boxes = [input_cap, input_val]
 
     def set_status(msg, color, logic=""):

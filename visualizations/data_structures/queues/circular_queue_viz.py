@@ -4,8 +4,9 @@ import math
 from core import Colors
 
 # --- Configuration ---
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 700
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
 
 # Map Colors
 BACKGROUND_COLOR = Colors.GREY
@@ -283,7 +284,7 @@ def run(screen):
     btn_enq = Button(200, 180, 100, 40, "Enqueue", do_enqueue)
     btn_deq = Button(50, 240, 120, 50, "Dequeue", do_dequeue)
     btn_peek = Button(180, 240, 120, 50, "Peek", do_peek)
-    btn_back = Button(900, 15, 80, 40, "← Back", go_back)
+    btn_back = Button(SCREEN_WIDTH - 100, 15, 80, 40, "← Back", go_back)
 
     buttons = [btn_set_cap, btn_enq, btn_deq, btn_peek, btn_back]
     input_boxes = [val_input, cap_input]

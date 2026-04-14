@@ -4,8 +4,10 @@ import random
 from core import Colors  # Your custom colors file
 
 # --- Configuration ---
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 700 
+import pygame
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h 
 SIDEBAR_WIDTH = 300
 
 # Colors
@@ -461,7 +463,7 @@ def run(screen):
     btn_next = Button(200, 240, 80, 40, "Next", btn_next_action)
     btn_reset = Button(20, 290, 260, 35, "Reset", btn_reset_action, color=Colors.ORANGE)
     
-    btn_back = Button(900, 15, 80, 40, "← Back", go_back, color=Colors.ORANGE)
+    btn_back = Button(SCREEN_WIDTH - 100, 15, 80, 40, "← Back", go_back, color=Colors.ORANGE)
     
     speed_slider = Slider(20, 360, 260, 50, 1000, 500)
 

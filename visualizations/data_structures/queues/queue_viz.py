@@ -19,7 +19,7 @@ ELEM_WIDTH = 100
 ELEM_HEIGHT = 70
 SPACING = 5
 START_X = 300
-MAX_ALLOWED_CAPACITY = 6
+MAX_ALLOWED_CAPACITY = 10
 
 # --- Font Loading ---
 def get_font(size, bold=False):
@@ -131,7 +131,7 @@ def run(screen):
             new_cap = int(cap_input.text)
 
             if new_cap > MAX_ALLOWED_CAPACITY:
-                set_status(f"Error: Max Limit is {MAX_ALLOWED_CAPACITY}!", ERROR_COLOR, "Constraint: Capacity <= 6")
+                set_status(f"Error: Max Limit is {MAX_ALLOWED_CAPACITY}!", ERROR_COLOR, f"Constraint: Capacity <= {MAX_ALLOWED_CAPACITY}")
                 cap_input.text = str(MAX_ALLOWED_CAPACITY)
                 cap_input.txt_surface = font_ui.render(cap_input.text, True, TEXT_COLOR)
                 return
@@ -190,7 +190,7 @@ def run(screen):
     btn_deq = Button(50, 240, 120, 50, "Dequeue", dequeue_item)
     btn_peek = Button(180, 240, 120, 50, "Peek", peek_item)
     # The back button calls go_back which returns "back"
-    btn_back = Button(900, 15, 80, 40, "← Back", go_back)
+    btn_back = Button(screen.get_width() - 100, 15, 80, 40, "← Back", go_back)
 
     buttons = [btn_set_cap, btn_enq, btn_deq, btn_peek, btn_back]
     input_boxes = [val_input, cap_input]
